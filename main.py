@@ -193,7 +193,7 @@ def find_conda_prefix() -> str:
         if os.path.isdir(path):
             try:
                 subprocess.check_output(
-                    [os.path.join(path, "conda"), "--version"]
+                    [os.path.join(path, "python"), "--version"]
                 )
                 return path
             except (subprocess.CalledProcessError, FileNotFoundError):
