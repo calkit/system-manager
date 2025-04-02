@@ -171,16 +171,19 @@ def get_platform() -> Literal["linux", "mac", "windows"]:
 
 
 def wsl_installed() -> bool:
-    output = (
-        subprocess.check_output(["wsl", "--status"])
-        .decode()
-        .replace("\x00", "")
-    )
-    return (
-        "Default Version: 2" in output
-        and "Default Distribution: Ubuntu" in output
-        and "not supported" not in output
-    )
+    try:
+        output = (
+            subprocess.check_output(["wsl", "--status"])
+            .decode()
+            .replace("\x00", "")
+        )
+        return (
+            "Default Version: 2" in output
+            and "Default Distribution: Ubuntu" in output
+            and "not supported" not in output
+        )
+    except subprocess.CalledProcessError:
+        return False
 
 
 def make_setup_step_layout(widget: QWidget) -> QHBoxLayout:
