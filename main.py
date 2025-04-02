@@ -665,7 +665,14 @@ class CondaInit(QWidget):
 
     def run_conda_init(self):
         print("Running conda init")
-        raise NotImplementedError  # TODO
+        if get_platform() == "windows":
+            conda_exe = os.path.join(find_conda_prefix(), "Scripts", "conda")
+            run_in_git_bash(f"{conda_exe} init bash")
+            # TODO: Init powershell as well
+        else:
+            conda_exe = os.path.join(find_conda_prefix(), "bin", "conda")
+            cmd = [conda_exe, "init"]
+            subprocess.run(cmd)
 
 
 def make_setup_step_widgets() -> dict[str, QWidget]:
