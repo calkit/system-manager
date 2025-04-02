@@ -169,6 +169,38 @@ def wsl_installed() -> bool:
         return False
 
 
+def find_conda_prefix() -> str:
+    """Attempt to find the Conda prefix.
+
+    This must be under the user directory.
+    """
+    paths = [
+        os.path.join(os.path.expanduser("~"), "miniforge3"),
+        os.path.join(
+            os.path.expanduser("~"),
+            "anaconda3",
+        ),
+        os.path.join(
+            os.path.expanduser("~"),
+            "miniconda3",
+        ),
+        os.path.join(
+            os.path.expanduser("~"),
+            "mambaforge",
+        ),
+    ]
+    for path in paths:
+        if os.path.isdir(path):
+            try:
+                subprocess.check_output(
+                    [os.path.join(path, "python"), "--version"]
+                )
+                return path
+            except (subprocess.CalledProcessError, FileNotFoundError):
+                return ""
+    return ""
+
+
 def make_setup_step_layout(widget: QWidget) -> QHBoxLayout:
     layout = QHBoxLayout(widget)
     layout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
@@ -382,7 +414,7 @@ class CondaInstall(DependencyInstall):
 
     @property
     def installed(self) -> bool:
-        return check_dep_exists("conda")
+        return bool(find_conda_prefix())
 
     def install(self) -> bool:
         """Install Conda."""
