@@ -1,0 +1,13 @@
+[project]
+name = "calkit-system-manager"
+version = "0.1.0"
+description = "An application to help manage a system for scientific computing."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "gitpython>=3.1.44",
+    "pydantic>=2.11.1",
+    "pyside6>=6.9.0",
+    "requests>=2.32.3",
+    "ruamel-yaml>=0.18.10",
+]
