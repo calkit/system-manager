@@ -7,6 +7,7 @@ in their editor of choice.
 import glob
 import os
 import platform
+import shutil
 import subprocess
 import sys
 import webbrowser
@@ -513,10 +514,11 @@ class VSCodeInstall(DependencyInstall):
 
     @property
     def installed(self) -> bool:
-        # TODO: This fails if we've just installed it
-        # We need to run in a new shell
+        code_path = shutil.which("code")
+        if code_path is None:
+            return False
         try:
-            subprocess.check_output("code --version", shell=True)
+            subprocess.check_output([code_path, "--version"])
             return True
         except subprocess.CalledProcessError:
             return False
