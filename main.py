@@ -218,6 +218,10 @@ def run_in_git_bash(command: str) -> subprocess.CompletedProcess:
     raise FileNotFoundError("Git Bash executable not found")
 
 
+def get_downloads_folder() -> str:
+    return os.path.join(os.path.expanduser("~"), "Downloads")
+
+
 def make_setup_step_layout(widget: QWidget) -> QHBoxLayout:
     layout = QHBoxLayout(widget)
     layout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
@@ -457,39 +461,24 @@ class CondaInstall(DependencyInstall):
         if pf != "windows":
             pf += "-" + arch
         url = urls[pf]
-        download_thread = FileDownloadThread(url=url, parent=self)
-        if not download_thread.file_exists:
-            print("Downloading Miniforge")
-            download_progress = QProgressDialog(
-                "Downloading Miniforge", None, 0, 100, self
-            )
-            download_thread.total_size.connect(download_progress.setMaximum)
-            download_thread.current_progress.connect(
-                download_progress.setValue
-            )
-            download_thread.success.connect(
-                lambda: download_progress.setValue(download_progress.maximum())
-            )
-            download_thread.start()
-        else:
-            print("Miniforge installer already downloaded")
-        # Now run the installer
         # This should open a new window, and our progress dialog should poll
         # for the app being installed in a thread
+        fname = os.path.basename(url)
+        fpath = os.path.join(get_downloads_folder(), fname)
         if pf.startswith("mac"):
-            cmd = ["/bin/zsh", download_thread.download_fpath]
+            cmd = ["/bin/zsh", fpath]
         elif pf.startswith("linux"):
-            cmd = ["/bin/bash", download_thread.download_fpath]
+            cmd = ["/bin/bash", fpath]
         elif pf.startswith("windows"):
-            cmd = [download_thread.download_fpath]
+            cmd = [fpath]
         print("Installing with command:", cmd)
-        install_thread = SubprocessThread(cmd=cmd, parent=self)
+        install_thread = InstallThread(url=url, cmd=cmd, parent=self)
         install_progress = QProgressDialog(
             "Installing Miniforge", None, 0, 0, self
         )
         install_thread.finished.connect(install_progress.close)
         install_thread.start()
-        return self.installed
+        return True
 
 
 class DockerInstall(DependencyInstall):
@@ -916,9 +905,7 @@ class FileDownloadThread(QThread):
     def __init__(self, url: str, parent=None):
         super().__init__(parent)
         self.url = url
-        self.downloads_folder = os.path.join(
-            os.path.expanduser("~"), "Downloads"
-        )
+        self.downloads_folder = get_downloads_folder()
         os.makedirs(self.downloads_folder, exist_ok=True)
         self.download_fpath = os.path.join(
             self.downloads_folder, os.path.basename(url)
@@ -971,9 +958,7 @@ class InstallThread(QThread):
         self.cmd = cmd
 
     def download_installer(self):
-        self.downloads_folder = os.path.join(
-            os.path.expanduser("~"), "Downloads"
-        )
+        self.downloads_folder = get_downloads_folder()
         os.makedirs(self.downloads_folder, exist_ok=True)
         self.download_fpath = os.path.join(
             self.downloads_folder, os.path.basename(self.url)
