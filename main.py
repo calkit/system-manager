@@ -298,7 +298,7 @@ class DependencyInstall(QWidget, metaclass=QWidgetABCMeta):
             self.install_button.setStyleSheet(
                 "font-size: 12px; padding: 0px; margin: 0px; border: none;"
             )
-            self.install_button.clicked.connect(self._install)
+            self.install_button.clicked.connect(self.install)
             self.layout.addWidget(self.install_button)
 
     @property
@@ -312,18 +312,34 @@ class DependencyInstall(QWidget, metaclass=QWidgetABCMeta):
         """Return a bool indicating if the dependency is installed."""
         raise NotImplementedError
 
-    @abstractmethod
+    @property
+    def install_command(self) -> list[str] | None:
+        return None
+
+    @property
+    def installer_download_url(self) -> str | None:
+        return None
+
     def install(self) -> bool:
         """Install the app, returning a bool indicating success."""
-        raise NotImplementedError
-
-    def _install(self) -> None:
-        """Run the full install process."""
-        # Disable install button
         self.install_button.setEnabled(False)
-        success = self.install()
-        # Check if this was successful
-        if success:
+        install_thread = InstallThread(
+            url=self.installer_download_url,
+            cmd=self.install_command,
+            parent=self,
+        )
+        install_progress = QProgressDialog(
+            f"Installing {self.dependency_name}", None, 0, 0, self
+        )
+        install_thread.finished.connect(install_progress.close)
+        install_thread.finished.connect(self.finish_install)
+        install_thread.start()
+        return True
+
+    def finish_install(self):
+        """After attempting to install, run this."""
+        installed = self.installed
+        if installed:
             self.layout.removeWidget(self.install_button)
             self.install_button.deleteLater()
             self.install_button = None
@@ -332,8 +348,11 @@ class DependencyInstall(QWidget, metaclass=QWidgetABCMeta):
             for step in self.child_steps:
                 step.setEnabled(True)
         else:
-            print("Failed")
-            # TODO: Show error message to user
+            QMessageBox.critical(
+                self,
+                "Installation failed",
+                "Installation failed.",
+            )
 
 
 class HomebrewInstall(DependencyInstall):
@@ -347,18 +366,15 @@ class HomebrewInstall(DependencyInstall):
     def installed(self) -> bool:
         return check_dep_exists("brew")
 
-    def install(self) -> bool:
-        subprocess.run(
-            [
-                "/bin/bash",
-                "-c",
-                (
-                    "$(curl -fsSL https://raw.githubusercontent.com/"
-                    "Homebrew/install/HEAD/install.sh)"
-                ),
-            ]
-        )
-        return subprocess.returncode == 0
+    def install_command(self) -> list[str]:
+        return [
+            "/bin/bash",
+            "-c",
+            (
+                "$(curl -fsSL https://raw.githubusercontent.com/"
+                "Homebrew/install/HEAD/install.sh)"
+            ),
+        ]
 
 
 class ChocolateyInstall(DependencyInstall):
@@ -437,8 +453,8 @@ class CondaInstall(DependencyInstall):
     def installed(self) -> bool:
         return bool(find_conda_prefix())
 
-    def install(self) -> bool:
-        """Install Conda."""
+    @property
+    def installer_download_url(self) -> str:
         # See https://github.com/conda-forge/miniforge/releases/latest
         urls = {
             "windows": (
@@ -460,10 +476,12 @@ class CondaInstall(DependencyInstall):
         arch = platform.machine().lower()
         if pf != "windows":
             pf += "-" + arch
-        url = urls[pf]
-        # This should open a new window, and our progress dialog should poll
-        # for the app being installed in a thread
-        fname = os.path.basename(url)
+        return urls[pf]
+
+    @property
+    def install_command(self) -> list[str]:
+        pf = get_platform()
+        fname = os.path.basename(self.installer_download_url)
         fpath = os.path.join(get_downloads_folder(), fname)
         if pf.startswith("mac"):
             cmd = ["/bin/zsh", fpath]
@@ -471,14 +489,7 @@ class CondaInstall(DependencyInstall):
             cmd = ["/bin/bash", fpath]
         elif pf.startswith("windows"):
             cmd = [fpath]
-        print("Installing with command:", cmd)
-        install_thread = InstallThread(url=url, cmd=cmd, parent=self)
-        install_progress = QProgressDialog(
-            "Installing Miniforge", None, 0, 0, self
-        )
-        install_thread.finished.connect(install_progress.close)
-        install_thread.start()
-        return True
+        return cmd
 
 
 class DockerInstall(DependencyInstall):
