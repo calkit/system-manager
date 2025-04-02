@@ -960,6 +960,60 @@ class FileDownloadThread(QThread):
         self.success.emit()
 
 
+class InstallThread(QThread):
+    """A thread to install something, optionally downloading first."""
+
+    def __init__(
+        self, url: str | None = None, cmd: list[str] | None = None, parent=None
+    ):
+        super().__init__(parent)
+        self.url = url
+        self.cmd = cmd
+
+    def download_installer(self):
+        self.downloads_folder = os.path.join(
+            os.path.expanduser("~"), "Downloads"
+        )
+        os.makedirs(self.downloads_folder, exist_ok=True)
+        self.download_fpath = os.path.join(
+            self.downloads_folder, os.path.basename(self.url)
+        )
+        if os.path.isfile(self.download_fpath):
+            print("Installer already exists")
+            return
+        url = self.url
+        filename = self.download_fpath
+        read_bytes = 0
+        chunk_size = 1024
+        # Open the URL address
+        with urlopen(url) as r:
+            # Tell the window the amount of bytes to be downloaded
+            with open(filename, "ab") as f:
+                while True:
+                    # Read a piece of the file we are downloading
+                    chunk = r.read(chunk_size)
+                    # If the result is `None`, that means data is not
+                    # downloaded yet
+                    # Just keep waiting
+                    if chunk is None:
+                        continue
+                    # If the result is an empty `bytes` instance, then
+                    # the file is complete
+                    elif chunk == b"":
+                        break
+                    # Write into the local file the downloaded chunk
+                    f.write(chunk)
+                    read_bytes += chunk_size
+
+    def run(self):
+        if self.url is not None:
+            self.download_installer()
+        cmd = self.cmd
+        if cmd is None:
+            cmd = [self.download_fpath]
+        subprocess.run(cmd)
+
+
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
