@@ -172,7 +172,7 @@ def wsl_installed() -> bool:
 def find_conda_prefix() -> str:
     """Attempt to find the Conda prefix.
 
-    This must be under the user directory.
+    This must be under the user's home directory.
     """
     paths = [
         os.path.join(os.path.expanduser("~"), "miniforge3"),
