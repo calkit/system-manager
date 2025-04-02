@@ -11,3 +11,27 @@ dependencies = [
     "requests>=2.32.3",
     "ruamel-yaml>=0.18.10",
 ]
+
+[dependency-groups]
+dev = [
+  "pre-commit",
+  "pyinstaller",
+  "pytest",
+  "pytest-cov",
+  "pytest-test-utils", # For tmp_dir fixture
+]
+
+[tool.mypy]
+files = ["calkit"]
+disallow_untyped_defs = true
+disallow_any_unimported = true
+no_implicit_optional = true
+check_untyped_defs = true
+warn_return_any = true
+warn_unused_ignores = true
+show_error_codes = true
+
+[tool.ruff]
+target-version = "py39"
+line-length = 79
+fix = true
