@@ -593,36 +593,44 @@ def make_setup_step_widgets() -> dict[str, QWidget]:
     # if not
     platform = get_platform()
     if platform == "mac":
+        print("Adding Homebrew install widget")
         steps["homebrew"] = HomebrewInstall()
     elif platform == "windows":
+        print("Adding Chocolatey install widget")
         steps["chocolatey"] = ChocolateyInstall()
+        print("Adding WSL Git config widgets")
         wsl_git_user = GitConfigStep(
             "user.name", pretty_name="full name", wsl=True
         )
         wsl_git_email = GitConfigStep(
             "user.email", pretty_name="email address", wsl=True
         )
+        print("Adding WSL Git install widget")
         wsl_git_install = WSLGitInstall(
             child_steps=[wsl_git_user, wsl_git_email]
         )
+        print("Adding WSL install widget")
         wsl_install = WSLInstall(child_steps=[wsl_git_install])
         steps["wsl"] = wsl_install
         steps["wsl-git"] = wsl_git_install
         steps["wsl-git-user"] = wsl_git_user
         steps["wsl-git-email"] = wsl_git_email
     # Install and configure Git
+    print("Adding Git config widgets")
     git_user_name = GitConfigStep(
         key="user.name", pretty_name="full name", wsl=False
     )
     git_user_email = GitConfigStep(
         key="user.email", pretty_name="email address", wsl=False
     )
+    print("Adding Git install widget")
     git_install = GitInstall(child_steps=[git_user_name, git_user_email])
     steps["git"] = git_install
     steps["git-user"] = git_user_name
     steps["git-email"] = git_user_email
     # TODO: Install everything in WSL if on Windows?
     # Install Docker
+    print("Adding Docker install widget")
     steps["docker"] = DockerInstall()
     # TODO: Ensure Docker is running
     # We can use `docker desktop status` and `docker desktop start` for this
@@ -630,11 +638,14 @@ def make_setup_step_widgets() -> dict[str, QWidget]:
     # TODO: Ensure Docker permissions are set on Linux
     # TODO: Ensure we have GitHub credentials?
     # TODO: Install Miniforge, initializing shell
+    print("Adding Conda install widget")
     steps["miniforge"] = CondaInstall()
     # TODO: Install Calkit inside Miniforge base environment
     # Ensure Calkit token is set
+    print("Adding Calkit token widget")
     steps["calkit-token"] = CalkitToken()
     # TODO: Install VS Code
+    print("Adding VS Code install widget")
     steps["vscode"] = VSCodeInstall()
     # TODO: Install recommended VS Code extensions
     return steps
