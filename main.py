@@ -331,6 +331,7 @@ class DependencyInstall(QWidget, metaclass=QWidgetABCMeta):
         install_progress = QProgressDialog(
             f"Installing {self.dependency_name}", None, 0, 0, self
         )
+        install_progress.setWindowTitle("Calkit")
         install_thread.finished.connect(install_progress.close)
         install_thread.finished.connect(self.finish_install)
         install_thread.start()
@@ -512,6 +513,8 @@ class VSCodeInstall(DependencyInstall):
 
     @property
     def installed(self) -> bool:
+        # TODO: This fails if we've just installed it
+        # We need to run in a new shell
         try:
             subprocess.check_output("code --version", shell=True)
             return True
