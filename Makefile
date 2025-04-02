@@ -43,3 +43,7 @@ docs: ## Build and serve the documentation.
 .PHONY: gui
 gui: ## Run the GUI in dev mode.
 	@uv run main.py
+
+.PHONY: build
+build:
+	@uv run pyinstaller --onefile --name calkit-sysmgr main.py
