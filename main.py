@@ -170,6 +170,19 @@ def get_platform() -> Literal["linux", "mac", "windows"]:
         raise ValueError("Unsupported platform")
 
 
+def wsl_installed() -> bool:
+    output = (
+        subprocess.check_output(["wsl", "--status"])
+        .decode()
+        .replace("\x00", "")
+    )
+    return (
+        "Default Version: 2" in output
+        and "Default Distribution: Ubuntu" in output
+        and "not supported" not in output
+    )
+
+
 def make_setup_step_layout(widget: QWidget) -> QHBoxLayout:
     layout = QHBoxLayout(widget)
     layout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
@@ -354,16 +367,7 @@ class WSLInstall(DependencyInstall):
 
     @property
     def installed(self) -> bool:
-        output = (
-            subprocess.check_output(["wsl", "--status"])
-            .decode()
-            .replace("\x00", "")
-        )
-        return (
-            "Default Version: 2" in output
-            and "Default Distribution: Ubuntu" in output
-            and "not supported" not in output
-        )
+        return wsl_installed()
 
     def install(self) -> bool:
         # Run command as administrator in PowerShell
@@ -507,6 +511,8 @@ class WSLGitInstall(DependencyInstall):
 
     @property
     def installed(self) -> bool:
+        if not wsl_installed():
+            return False
         try:
             subprocess.check_output(["wsl", "git", "--version"])
             return True
@@ -556,6 +562,8 @@ class GitConfigStep(QWidget):
 
     @property
     def value(self) -> str:
+        if self.wsl and not wsl_installed():
+            return ""
         try:
             return (
                 subprocess.check_output(self.cmd + [self.key]).decode().strip()
