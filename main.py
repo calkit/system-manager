@@ -366,6 +366,7 @@ class HomebrewInstall(DependencyInstall):
     def installed(self) -> bool:
         return check_dep_exists("brew")
 
+    @property
     def install_command(self) -> list[str]:
         return [
             "/bin/bash",
@@ -420,6 +421,7 @@ class WSLInstall(DependencyInstall):
     def installed(self) -> bool:
         return wsl_installed()
 
+    @property
     def install_command(self) -> list[str]:
         # Run command as administrator in PowerShell
         cmd = "wsl --install -d Ubuntu"
@@ -516,6 +518,7 @@ class VSCodeInstall(DependencyInstall):
         except subprocess.CalledProcessError:
             return False
 
+    @property
     def install_command(self) -> list[str]:
         platform = get_platform()
         if platform == "windows":
