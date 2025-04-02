@@ -141,26 +141,6 @@ def get_calkit_token() -> str:
         return ""
 
 
-def git_installed() -> bool:
-    return check_dep_exists("git")
-
-
-def git_user_name() -> str:
-    return (
-        subprocess.check_output(["git", "config", "user.name"])
-        .decode()
-        .strip()
-    )
-
-
-def git_email() -> str:
-    return (
-        subprocess.check_output(["git", "config", "user.email"])
-        .decode()
-        .strip()
-    )
-
-
 def get_platform() -> Literal["linux", "mac", "windows"]:
     """Get the platform name."""
     if sys.platform.startswith("linux"):
@@ -574,7 +554,7 @@ class GitConfigStep(QWidget):
             return (
                 subprocess.check_output(self.cmd + [self.key]).decode().strip()
             )
-        except subprocess.CalledProcessError:
+        except (subprocess.CalledProcessError, FileNotFoundError):
             return ""
 
     def open_dialog(self):
