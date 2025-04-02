@@ -330,7 +330,7 @@ class DependencyInstall(QWidget, metaclass=QWidgetABCMeta):
             parent=self,
         )
         install_progress = QProgressDialog(
-            f"Installing {self.dependency_name}", None, 0, 0, self
+            f"Installing {self.dependency_name}...", None, 0, 0, self
         )
         install_progress.setWindowTitle("Calkit")
         install_thread.finished.connect(install_progress.close)
