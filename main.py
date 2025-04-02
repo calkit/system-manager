@@ -14,6 +14,9 @@ from abc import ABCMeta, abstractmethod
 from typing import Literal
 from urllib.request import urlopen
 
+# Set env var for gitpython so it doesn't fail if not installed
+os.environ["GIT_PYTHON_REFRESH"] = "quiet"
+
 import git
 import git.exc
 import requests
