@@ -11,6 +11,7 @@ import subprocess
 import sys
 import webbrowser
 from abc import ABCMeta, abstractmethod
+from pathlib import Path
 from typing import Literal
 from urllib.request import urlopen
 
@@ -668,6 +669,8 @@ class CondaInit(QWidget):
         print("Running conda init")
         if get_platform() == "windows":
             conda_exe = os.path.join(find_conda_prefix(), "Scripts", "conda")
+            # Convert to posix path
+            conda_exe = Path(conda_exe).as_posix()
             run_in_git_bash(f"{conda_exe} init bash")
             # TODO: Init powershell as well
         else:
