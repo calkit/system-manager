@@ -538,6 +538,8 @@ class GitInstall(DependencyInstall):
         platform = get_platform()
         if platform == "windows":
             # Use Chocolatey to install Git
+            # TODO: Use winget?
+            # winget install --id Git.Git -e --source winget
             process = subprocess.run(["choco", "install", "git"])
         elif platform == "mac":
             process = subprocess.run(["brew", "install", "git"])
