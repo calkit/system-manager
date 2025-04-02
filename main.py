@@ -214,7 +214,7 @@ def run_in_git_bash(command: str) -> subprocess.CompletedProcess:
     ]
     for path in paths:
         if os.path.isfile(path):
-            return subprocess.run([path, "-c", command])
+            return subprocess.run([path, "--login", "-c", command])
     raise FileNotFoundError("Git Bash executable not found")
 
 
