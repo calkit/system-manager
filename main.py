@@ -238,7 +238,7 @@ class CalkitToken(QWidget):
         self.update_button.setText("✏️")
         self.update_button.setCursor(Qt.PointingHandCursor)
         self.update_button.setStyleSheet(
-            "font-size: 10px; padding: 0px; margin: 0px; border: none;"
+            "font-size: 12px; padding: 0px; margin: 0px; border: none;"
         )
         self.update_button.setFixedSize(18, 18)
         self.update_button.setToolTip("Update")
@@ -589,7 +589,7 @@ class GitConfigStep(QWidget):
         self.update_button.setText("✏️")
         self.update_button.setCursor(Qt.PointingHandCursor)
         self.update_button.setStyleSheet(
-            "font-size: 10px; padding: 0px; margin: 0px; border: none;"
+            "font-size: 12px; padding: 0px; margin: 0px; border: none;"
         )
         self.update_button.setFixedSize(18, 18)
         self.update_button.setToolTip("Update")
@@ -643,7 +643,7 @@ class CondaInit(QWidget):
             self.run_button.setText("🪄")
             self.run_button.setCursor(Qt.PointingHandCursor)
             self.run_button.setStyleSheet(
-                "font-size: 10px; padding: 0px; margin: 0px; border: none;"
+                "font-size: 12px; padding: 0px; margin: 0px; border: none;"
             )
             self.run_button.setFixedSize(18, 18)
             self.run_button.setToolTip("Run conda init")
