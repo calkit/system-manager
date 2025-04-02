@@ -702,25 +702,9 @@ def make_setup_step_widgets() -> dict[str, QWidget]:
         print("Adding Homebrew install widget")
         steps["homebrew"] = HomebrewInstall()
     elif platform == "windows":
-        print("Adding Chocolatey install widget")
-        steps["chocolatey"] = ChocolateyInstall()
-        print("Adding WSL Git config widgets")
-        wsl_git_user = GitConfigStep(
-            "user.name", pretty_name="full name", wsl=True
-        )
-        wsl_git_email = GitConfigStep(
-            "user.email", pretty_name="email address", wsl=True
-        )
-        print("Adding WSL Git install widget")
-        wsl_git_install = WSLGitInstall(
-            child_steps=[wsl_git_user, wsl_git_email]
-        )
         print("Adding WSL install widget")
-        wsl_install = WSLInstall(child_steps=[wsl_git_install])
+        wsl_install = WSLInstall()
         steps["wsl"] = wsl_install
-        steps["wsl-git"] = wsl_git_install
-        steps["wsl-git-user"] = wsl_git_user
-        steps["wsl-git-email"] = wsl_git_email
     # Install and configure Git
     print("Adding Git config widgets")
     git_user_name = GitConfigStep(
