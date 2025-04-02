@@ -131,11 +131,14 @@ def detect_project_name(wdir: str = None) -> str:
 
 
 def get_calkit_token() -> str:
-    return (
-        subprocess.check_output(["calkit", "config", "get", "token"])
-        .decode()
-        .strip()
-    )
+    try:
+        return (
+            subprocess.check_output(["calkit", "config", "get", "token"])
+            .decode()
+            .strip()
+        )
+    except FileNotFoundError:
+        return ""
 
 
 def git_installed() -> bool:
