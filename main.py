@@ -459,7 +459,6 @@ class CondaInstall(DependencyInstall):
         # Now run the installer
         # This should open a new window, and our progress dialog should poll
         # for the app being installed in a thread
-        # TODO: This command needs to respect the platform
         if pf.startswith("mac"):
             cmd = ["/bin/zsh", download_thread.download_fpath]
         elif pf.startswith("linux"):
