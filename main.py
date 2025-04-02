@@ -516,11 +516,20 @@ class VSCodeInstall(DependencyInstall):
         except subprocess.CalledProcessError:
             return False
 
-    def install(self) -> bool:
-        """Install VS Code."""
-        # First check our platform and download the installer
-        # Run the installer
-        raise NotImplementedError
+    def install_command(self) -> list[str]:
+        platform = get_platform()
+        if platform == "windows":
+            return [
+                "winget",
+                "install",
+                "-e",
+                "--id",
+                "Microsoft.VisualStudioCode",
+            ]
+        elif platform == "mac":
+            return ["brew", "install", "--cask", "visual-studio-code"]
+        else:
+            raise NotImplementedError
 
 
 class GitInstall(DependencyInstall):
@@ -532,28 +541,24 @@ class GitInstall(DependencyInstall):
     def installed(self) -> bool:
         return check_dep_exists("git")
 
-    def install(self):
+    @property
+    def install_command(self) -> list[str]:
         platform = get_platform()
         if platform == "windows":
             # Use winget to install Git
-            process = subprocess.run(
-                [
-                    "winget",
-                    "install",
-                    "--id",
-                    "Git.Git",
-                    "-e",
-                    "--source",
-                    "winget",
-                ]
-            )
+            return [
+                "winget",
+                "install",
+                "--id",
+                "Git.Git",
+                "-e",
+                "--source",
+                "winget",
+            ]
         elif platform == "mac":
-            process = subprocess.run(["brew", "install", "git"])
-        elif platform == "linux":
-            # Use apt to install Git
-            cmd = "apt install git"
-            process = subprocess.run(["pkexec", "sh", "-c", cmd])
-        return process.returncode == 0
+            return ["brew", "install", "git"]
+        else:
+            raise NotImplementedError
 
 
 class WSLGitInstall(DependencyInstall):
