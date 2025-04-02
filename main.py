@@ -658,9 +658,12 @@ class CondaInit(QWidget):
         platform = get_platform()
         if platform == "windows":
             print("Checking that Git Bash can run Conda")
-            process = run_in_git_bash("conda --version")
-            if process.returncode != 0:
-                print(f"Failed to run Conda in Git Bash: {process.stderr}")
+            try:
+                process = run_in_git_bash("conda --version")
+                if process.returncode != 0:
+                    print(f"Failed to run Conda in Git Bash: {process.stderr}")
+                    return False
+            except FileNotFoundError:
                 return False
             return True
         return bool(check_dep_exists("conda"))
