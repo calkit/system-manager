@@ -201,6 +201,22 @@ def find_conda_prefix() -> str:
     return ""
 
 
+def run_in_git_bash(command: str) -> subprocess.CompletedProcess:
+    """Run a command in Git Bash on Windows."""
+    # Find the Git Bash executable path
+    # Common locations:
+    paths = [
+        r"C:\Program Files\Git\bin\bash.exe",
+        r"C:\Program Files\Git\git-bash.exe",
+        r"C:\Program Files (x86)\Git\bin\bash.exe",
+        r"C:\Program Files (x86)\Git\git-bash.exe",
+    ]
+    for path in paths:
+        if os.path.isfile(path):
+            return subprocess.run([path, "-c", command])
+    raise FileNotFoundError("Git Bash executable not found")
+
+
 def make_setup_step_layout(widget: QWidget) -> QHBoxLayout:
     layout = QHBoxLayout(widget)
     layout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
@@ -611,6 +627,47 @@ class GitConfigStep(QWidget):
             self.label.setText(self.txt_set)
 
 
+class CondaInit(QWidget):
+    """A widget to ensure Conda has been initialized in the relevant shell."""
+
+    def __init__(self):
+        super().__init__()
+        self.layout = make_setup_step_layout(self)
+        is_done = self.is_done
+        self.txt_not_set = "Run conda init: ❌"
+        self.txt_set = "Run conda init: ✅"
+        self.label = QLabel(self.txt_set if is_done else self.txt_not_set)
+        self.layout.addWidget(self.label)
+        if not is_done:
+            self.run_button = QPushButton(self)
+            self.run_button.setText("🪄")
+            self.run_button.setCursor(Qt.PointingHandCursor)
+            self.run_button.setStyleSheet(
+                "font-size: 10px; padding: 0px; margin: 0px; border: none;"
+            )
+            self.run_button.setFixedSize(18, 18)
+            self.run_button.setToolTip("Run conda init")
+            self.run_button.clicked.connect(self.run_conda_init)
+            self.layout.addWidget(self.run_button)
+
+    @property
+    def is_done(self) -> bool:
+        platform = get_platform()
+        if platform == "windows":
+            print("Checking that Git Bash can run Conda")
+            try:
+                run_in_git_bash("conda --version")
+                return True
+            except Exception as e:
+                print(f"Failed to run Conda in Git Bash: {e}")
+                return False
+        return bool(check_dep_exists("conda"))
+
+    def run_conda_init(self):
+        print("Running conda init")
+        raise NotImplementedError  # TODO
+
+
 def make_setup_step_widgets() -> dict[str, QWidget]:
     """Create a list of setup steps."""
     steps = {}
@@ -662,9 +719,11 @@ def make_setup_step_widgets() -> dict[str, QWidget]:
     # However, this is not necessary on Linux
     # TODO: Ensure Docker permissions are set on Linux
     # TODO: Ensure we have GitHub credentials?
-    # TODO: Install Miniforge, initializing shell
+    # Install Miniforge and check that shell is initialized
     print("Adding Conda install widget")
     steps["miniforge"] = CondaInstall()
+    print("Adding Conda init widget")
+    steps["conda-init"] = CondaInit()
     # TODO: Install Calkit inside Miniforge base environment
     # Ensure Calkit token is set
     print("Adding Calkit token widget")
