@@ -388,7 +388,8 @@ class ChocolateyInstall(DependencyInstall):
     def installed(self) -> bool:
         return check_dep_exists("choco")
 
-    def install(self) -> bool:
+    @property
+    def install_command(self) -> list[str]:
         cmd = (
             "Set-ExecutionPolicy Bypass -Scope Process -Force; "
             "[System.Net.ServicePointManager]::SecurityProtocol = "
@@ -396,21 +397,16 @@ class ChocolateyInstall(DependencyInstall):
             "iex ((New-Object System.Net.WebClient).DownloadString("
             "'https://community.chocolatey.org/install.ps1'))"
         )
-        process = subprocess.run(
-            [
-                "powershell",
-                "-Command",
-                "Start-Process",
-                "powershell",
-                "-Verb",
-                "runAs",
-                "-ArgumentList",
-                f"'{cmd}'",
-            ],
-            capture_output=True,
-            text=True,
-        )
-        return process.returncode == 0
+        return [
+            "powershell",
+            "-Command",
+            "Start-Process",
+            "powershell",
+            "-Verb",
+            "runAs",
+            "-ArgumentList",
+            f"'{cmd}'",
+        ]
 
 
 class WSLInstall(DependencyInstall):
@@ -424,24 +420,19 @@ class WSLInstall(DependencyInstall):
     def installed(self) -> bool:
         return wsl_installed()
 
-    def install(self) -> bool:
+    def install_command(self) -> list[str]:
         # Run command as administrator in PowerShell
         cmd = "wsl --install -d Ubuntu"
-        process = subprocess.run(
-            [
-                "powershell",
-                "-Command",
-                "Start-Process",
-                "powershell",
-                "-Verb",
-                "runAs",
-                "-ArgumentList",
-                f"'{cmd}'",
-            ],
-            capture_output=True,
-            text=True,
-        )
-        return process.returncode == 0
+        return [
+            "powershell",
+            "-Command",
+            "Start-Process",
+            "powershell",
+            "-Verb",
+            "runAs",
+            "-ArgumentList",
+            f"'{cmd}'",
+        ]
 
 
 class CondaInstall(DependencyInstall):
@@ -501,9 +492,15 @@ class DockerInstall(DependencyInstall):
     def installed(self) -> bool:
         return check_dep_exists("docker")
 
-    def install(self) -> bool:
-        # TODO
-        raise NotImplementedError
+    @property
+    def install_command(self) -> list[str] | None:
+        platform = get_platform()
+        if platform == "windows":
+            return ["winget", "install", "-e", "--id", "Docker.DockerDesktop"]
+        elif platform == "mac":
+            return ["brew", "install", "--cask", "docker"]
+        else:
+            raise NotImplementedError
 
 
 class VSCodeInstall(DependencyInstall):
