@@ -367,7 +367,7 @@ class DependencyInstall(QWidget, metaclass=QWidgetABCMeta):
         install_progress = QProgressDialog(
             f"Installing {self.dependency_name}...", None, 0, 0, self
         )
-        install_progress.setWindowTitle("Calkit")
+        install_progress.setWindowTitle("Calkit Assistant")
         install_thread.finished.connect(install_progress.close)
         install_thread.finished.connect(self.finish_install)
         install_thread.start()
@@ -1131,7 +1131,7 @@ class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
         # Set title and create layout
-        self.setWindowTitle("Calkit")
+        self.setWindowTitle("Calkit Assistant")
         self.layout = QHBoxLayout(self)
         # Add Calkit logo
         self.logo = QLabel()
