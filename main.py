@@ -4,6 +4,8 @@ This app helps install and track system-wide dependencies and open projects
 in their editor of choice.
 """
 
+__version__ = "0.0.1"
+
 import glob
 import os
 import platform
@@ -1375,6 +1377,7 @@ class MainWindow(QWidget):
 
 
 def run():
+    print(f"Starting Calkit Assistant v{__version__}")
     app = QApplication(sys.argv)
     icon = QIcon("resources/icon.ico")
     app.setWindowIcon(icon)
