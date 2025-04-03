@@ -1,3 +1,4 @@
-# Calkit System Manager
+# Calkit Assistant
 
-A graphical desktop app to help manage your machine for scientific computing.
+A graphical desktop app to you get your machine set up for
+modern scientific computing.
