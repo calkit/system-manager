@@ -227,6 +227,10 @@ def run_in_git_bash(command: str) -> subprocess.CompletedProcess:
     raise FileNotFoundError("Git Bash executable not found")
 
 
+def run_in_powershell(cmd: str) -> subprocess.CompletedProcess:
+    return subprocess.run(["powershell", "-Command", cmd])
+
+
 def get_downloads_folder() -> str:
     return os.path.join(os.path.expanduser("~"), "Downloads")
 
@@ -686,10 +690,16 @@ class CondaInit(QWidget):
             print("Checking that Git Bash can run Conda")
             try:
                 process = run_in_git_bash("conda --version")
-                if process.returncode != 0:
-                    print(f"Failed to run Conda in Git Bash: {process.stderr}")
-                    return False
-            except FileNotFoundError:
+                process.check_returncode()
+            except Exception as e:
+                print(f"Failed to run Conda in Git Bash: {e}")
+                return False
+            print("Checking that Powershell can run Conda")
+            try:
+                process = run_in_powershell("conda --version")
+                process.check_returncode()
+            except Exception as e:
+                print(f"Failed to run Conda in Powershell: {e}")
                 return False
             return True
         return bool(check_dep_exists("conda"))
@@ -700,7 +710,7 @@ class CondaInit(QWidget):
             conda_exe = os.path.join(find_conda_prefix(), "Scripts", "conda")
             # Convert to posix path
             conda_exe = Path(conda_exe).as_posix()
-            run_in_git_bash(f"{conda_exe} init bash")
+            run_in_git_bash(f"{conda_exe} init bash powershell")
             # TODO: Init powershell as well
         else:
             conda_exe = os.path.join(find_conda_prefix(), "bin", "conda")
