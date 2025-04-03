@@ -203,6 +203,14 @@ def find_conda_prefix() -> str:
     return ""
 
 
+def get_conda_scripts_dir() -> str:
+    prefix = find_conda_prefix()
+    platform = get_platform()
+    if platform == "windows":
+        return os.path.join(prefix, "Scripts")
+    return os.path.join(prefix, "bin")
+
+
 def run_in_git_bash(command: str) -> subprocess.CompletedProcess:
     """Run a command in Git Bash on Windows."""
     # Find the Git Bash executable path
