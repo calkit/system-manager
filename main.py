@@ -718,6 +718,22 @@ class CondaInit(QWidget):
             subprocess.run(cmd)
 
 
+class CalkitInstall(DependencyInstall):
+    @property
+    def dependency_name(self) -> str:
+        return "Calkit"
+
+    @property
+    def installed(self) -> bool:
+        exe = os.path.join(get_conda_scripts_dir(), "calkit")
+        return check_dep_exists(exe)
+
+    @property
+    def install_command(self) -> list[str]:
+        pip_exe = os.path.join(get_conda_scripts_dir(), "pip")
+        return [pip_exe, "install", "--upgrade", "calkit-python"]
+
+
 def make_setup_step_widgets() -> dict[str, QWidget]:
     """Create a list of setup steps."""
     steps = {}
@@ -754,15 +770,19 @@ def make_setup_step_widgets() -> dict[str, QWidget]:
     # TODO: Ensure Docker permissions are set on Linux
     # TODO: Ensure we have GitHub credentials?
     # Install Miniforge and check that shell is initialized
-    print("Adding Conda install widget")
-    steps["miniforge"] = CondaInstall()
+    print("Adding Calkit install widget")
+    calkit_install = CalkitInstall()
     print("Adding Conda init widget")
-    steps["conda-init"] = CondaInit()
-    # TODO: Install Calkit inside Miniforge base environment
+    conda_init = CondaInit()
+    print("Adding Conda install widget")
+    steps["miniforge"] = CondaInstall(child_steps=[conda_init, calkit_install])
+    steps["conda-init"] = conda_init
+    # Install Calkit inside Miniforge base environment
+    steps["calkit"] = calkit_install
     # Ensure Calkit token is set
     print("Adding Calkit token widget")
     steps["calkit-token"] = CalkitToken()
-    # TODO: Install VS Code
+    # Install VS Code
     print("Adding VS Code install widget")
     steps["vscode"] = VSCodeInstall()
     # TODO: Install recommended VS Code extensions
