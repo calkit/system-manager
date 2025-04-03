@@ -734,6 +734,7 @@ class CondaInit(QWidget):
 
     def run_conda_init(self):
         print("Running conda init")
+        self.run_button.setEnabled(False)
         if get_platform() == "windows":
             # First make sure we can run scripts in PowerShell
             print("Setting PowerShell execution policy to RemoteSigned")
@@ -758,6 +759,7 @@ class CondaInit(QWidget):
             # Update label to show it's done
             self.label.setText(self.txt_set)
         else:
+            self.run_button.setEnabled(True)
             QMessageBox.critical(
                 self,
                 "Conda init failed",
