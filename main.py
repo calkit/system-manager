@@ -135,9 +135,10 @@ def detect_project_name(wdir: str = None) -> str:
 
 
 def get_calkit_token() -> str:
+    exe = os.path.join(get_conda_scripts_dir(), "calkit")
     try:
         return (
-            subprocess.check_output(["calkit", "config", "get", "token"])
+            subprocess.check_output([exe, "config", "get", "token"])
             .decode()
             .strip()
         )
