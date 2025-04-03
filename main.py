@@ -784,6 +784,33 @@ class CalkitInstall(DependencyInstall):
         return [pip_exe, "install", "--upgrade", "calkit-python"]
 
 
+class UvInstall(DependencyInstall):
+    @property
+    def dependency_name(self) -> str:
+        return "uv"
+
+    @property
+    def installed(self) -> bool:
+        return check_dep_exists("uv")
+
+    @property
+    def install_command(self) -> list[str]:
+        platform = get_platform()
+        if platform == "windows":
+            return [
+                "powershell",
+                "-ExecutionPolicy",
+                "ByPass",
+                "-c",
+                "irm https://astral.sh/uv/0.6.12/install.ps1 | iex",
+            ]
+        return [
+            "/bin/bash",
+            "-c",
+            "curl -LsSf https://astral.sh/uv/install.sh | sh",
+        ]
+
+
 def make_setup_step_widgets() -> dict[str, QWidget]:
     """Create a list of setup steps."""
     steps = {}
@@ -827,6 +854,9 @@ def make_setup_step_widgets() -> dict[str, QWidget]:
     print("Adding Conda install widget")
     steps["miniforge"] = CondaInstall(child_steps=[conda_init, calkit_install])
     steps["conda-init"] = conda_init
+    # Install uv
+    print("Adding uv install widget")
+    steps["uv"] = UvInstall()
     # Install Calkit inside Miniforge base environment
     steps["calkit"] = calkit_install
     # Ensure Calkit token is set
