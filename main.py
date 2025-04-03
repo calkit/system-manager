@@ -512,7 +512,15 @@ class DockerInstall(DependencyInstall):
     def install_command(self) -> list[str] | None:
         platform = get_platform()
         if platform == "windows":
-            return ["winget", "install", "-e", "--id", "Docker.DockerDesktop"]
+            return [
+                "winget",
+                "install",
+                "--accept-source-agreements",
+                "--accept-package-agreements",
+                "-e",
+                "--id",
+                "Docker.DockerDesktop",
+            ]
         elif platform == "mac":
             return ["brew", "install", "--cask", "docker"]
         else:
