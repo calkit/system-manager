@@ -1338,8 +1338,8 @@ class MainWindow(QWidget):
 
 
 def run():
-    icon = QIcon("resources/icon.ico")
     app = QApplication(sys.argv)
+    icon = QIcon("resources/icon.ico")
     app.setWindowIcon(icon)
     window = MainWindow()
     window.show()
