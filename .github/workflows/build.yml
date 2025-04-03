@@ -6,6 +6,7 @@ on:
 
 jobs:
   build-windows:
+    name: Build for Windows
     runs-on: windows-latest
     steps:
       - name: Checkout code
