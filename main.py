@@ -559,6 +559,9 @@ class GitInstall(DependencyInstall):
 
     @property
     def installed(self) -> bool:
+        if get_platform() == "windows":
+            process = run_in_git_bash("git --version")
+            return process.returncode == 0
         return check_dep_exists("git")
 
     @property
