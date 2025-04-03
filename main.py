@@ -714,11 +714,22 @@ class CondaInit(QWidget):
             # Convert to posix path
             conda_exe = Path(conda_exe).as_posix()
             run_in_git_bash(f"{conda_exe} init bash powershell")
-            # TODO: Init powershell as well
         else:
             conda_exe = os.path.join(find_conda_prefix(), "bin", "conda")
             cmd = [conda_exe, "init"]
             subprocess.run(cmd)
+        if self.is_done:
+            self.layout.removeWidget(self.run_button)
+            self.run_button.deleteLater()
+            self.run_button = None
+            # Update label to show it's done
+            self.label.setText(self.txt_set)
+        else:
+            QMessageBox.critical(
+                self,
+                "Conda init failed",
+                "Conda init failed.",
+            )
 
 
 class CalkitInstall(DependencyInstall):
