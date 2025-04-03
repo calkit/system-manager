@@ -211,7 +211,9 @@ def get_conda_scripts_dir() -> str:
     return os.path.join(prefix, "bin")
 
 
-def run_in_git_bash(command: str) -> subprocess.CompletedProcess:
+def run_in_git_bash(
+    command: str, capture_output: bool = False, check: bool = False
+) -> subprocess.CompletedProcess:
     """Run a command in Git Bash on Windows."""
     # Find the Git Bash executable path
     # Common locations:
@@ -223,12 +225,27 @@ def run_in_git_bash(command: str) -> subprocess.CompletedProcess:
     ]
     for path in paths:
         if os.path.isfile(path):
-            return subprocess.run([path, "--login", "-c", command])
+            return subprocess.run(
+                [path, "--login", "-c", command],
+                capture_output=capture_output,
+                check=check,
+            )
     raise FileNotFoundError("Git Bash executable not found")
 
 
-def run_in_powershell(cmd: str) -> subprocess.CompletedProcess:
-    return subprocess.run(["powershell", "-Command", cmd])
+def run_in_powershell(
+    cmd: str,
+    as_admin: bool = False,
+    capture_output: bool = False,
+    check: bool = False,
+) -> subprocess.CompletedProcess:
+    if as_admin:
+        cmd = f"Start-Process PowerShell -Verb RunAs -ArgumentList '{cmd}'"
+    return subprocess.run(
+        ["powershell", "-Command", cmd],
+        capture_output=capture_output,
+        check=check,
+    )
 
 
 def get_downloads_folder() -> str:
@@ -718,6 +735,14 @@ class CondaInit(QWidget):
     def run_conda_init(self):
         print("Running conda init")
         if get_platform() == "windows":
+            # First make sure we can run scripts in PowerShell
+            print("Setting PowerShell execution policy to RemoteSigned")
+            run_in_powershell(
+                "Set-ExecutionPolicy -ExecutionPolicy RemoteSigned",
+                as_admin=True,
+                capture_output=False,
+                check=False,
+            )
             conda_exe = os.path.join(find_conda_prefix(), "Scripts", "conda")
             # Convert to posix path
             conda_exe = Path(conda_exe).as_posix()
