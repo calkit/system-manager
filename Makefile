@@ -45,5 +45,9 @@ gui: ## Run the GUI in dev mode.
 	@uv run main.py
 
 .PHONY: build
-build:
-	@uv run pyinstaller --onefile --name calkit-sysmgr main.py
+build: ## Build the GUI with PyInstaller.
+	@uv run pyinstaller --onefile --icon resources/icon.ico --name calkit-sysmgr main.py
+
+.PHONY: icon
+icon: resources/c-to-the-k.svg ## Create the app icon.
+	@convert -density 256x256 -background transparent resources/c-to-the-k.svg -define icon:auto-resize -colors 256 resources/icon.ico
