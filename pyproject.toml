@@ -1,5 +1,5 @@
 [project]
-name = "calkit-system-manager"
+name = "calkit-assistant"
 version = "0.1.0"
 description = "An application to help manage a system for scientific computing."
 readme = "README.md"
