@@ -295,7 +295,8 @@ class CalkitToken(QWidget):
             echo=QLineEdit.Password,
         )
         if ok and text:
-            cmd = ["calkit", "config", "set", "token", text]
+            exe = os.path.join(get_conda_scripts_dir(), "calkit")
+            cmd = [exe, "config", "set", "token", text]
             subprocess.check_call(cmd)
             self.label.setText(self.txt_set)
 
@@ -1279,7 +1280,8 @@ class MainWindow(QWidget):
 
     def clone_project(self, item: QListWidgetItem) -> None:
         project_name = item.data(Qt.UserRole)
-        cmd = ["calkit", "clone", project_name]
+        exe = os.path.join(get_conda_scripts_dir(), "calkit")
+        cmd = [exe, "clone", project_name]
         wdir = os.path.join(os.path.expanduser("~"), "calkit")
         os.makedirs(wdir, exist_ok=True)
         # Clone in a thread with a progress dialog
