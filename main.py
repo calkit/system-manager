@@ -1338,7 +1338,7 @@ class MainWindow(QWidget):
 
 
 def run():
-    icon = QIcon("resources/c-to-the-k.svg")
+    icon = QIcon("resources/icon.ico")
     app = QApplication(sys.argv)
     app.setWindowIcon(icon)
     window = MainWindow()
