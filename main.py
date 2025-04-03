@@ -176,6 +176,7 @@ def find_conda_prefix() -> str:
 
     This must be under the user's home directory.
     """
+    platform = get_platform()
     paths = [
         os.path.join(os.path.expanduser("~"), "miniforge3"),
         os.path.join(
@@ -192,11 +193,13 @@ def find_conda_prefix() -> str:
         ),
     ]
     for path in paths:
+        if platform == "windows":
+            exe = os.path.join(path, "python")
+        else:
+            exe = os.path.join(path, "bin", "python")
         if os.path.isdir(path):
             try:
-                subprocess.check_output(
-                    [os.path.join(path, "python"), "--version"]
-                )
+                subprocess.check_output([exe, "--version"])
                 return path
             except (subprocess.CalledProcessError, FileNotFoundError):
                 return ""
