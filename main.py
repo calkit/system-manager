@@ -183,6 +183,17 @@ def wsl_installed() -> bool:
         return False
 
 
+def vs_code_installed() -> bool:
+    code_path = shutil.which("code")
+    if code_path is None:
+        return False
+    try:
+        subprocess.check_output([code_path, "--version"])
+        return True
+    except subprocess.CalledProcessError:
+        return False
+
+
 def find_conda_prefix() -> str:
     """Attempt to find the Conda prefix.
 
@@ -280,6 +291,8 @@ def make_setup_step_layout(widget: QWidget) -> QHBoxLayout:
 class CalkitToken(QWidget):
     """A widget to set the Calkit token."""
 
+    just_set = Signal()
+
     def __init__(self):
         super().__init__()
         print("Checking Calkit token status")
@@ -333,6 +346,7 @@ class CalkitToken(QWidget):
             cmd = [exe, "config", "set", "token", text]
             subprocess.check_call(cmd)
             self.refresh()
+            self.just_set.emit()
 
 
 class QWidgetABCMeta(ABCMeta, type(QWidget)):
@@ -341,6 +355,8 @@ class QWidgetABCMeta(ABCMeta, type(QWidget)):
 
 class DependencyInstall(QWidget, metaclass=QWidgetABCMeta):
     """An abstract base class to represent an installed dependency."""
+
+    just_installed = Signal()
 
     def __init__(self, child_steps: list[QWidget] = []):
         super().__init__()
@@ -431,6 +447,7 @@ class DependencyInstall(QWidget, metaclass=QWidgetABCMeta):
         self.refresh()
         for step in self.child_steps:
             step.refresh()
+        self.just_installed.emit()
         if not self.installed:
             QMessageBox.critical(
                 self,
@@ -604,14 +621,7 @@ class VSCodeInstall(DependencyInstall):
 
     @property
     def installed(self) -> bool:
-        code_path = shutil.which("code")
-        if code_path is None:
-            return False
-        try:
-            subprocess.check_output([code_path, "--version"])
-            return True
-        except subprocess.CalledProcessError:
-            return False
+        return vs_code_installed()
 
     @property
     def install_command(self) -> list[str]:
@@ -1316,63 +1326,21 @@ class NewProjectThread(QThread):
             self.success = True
 
 
-class MainWindow(QWidget):
-    def __init__(self):
-        super().__init__()
-        # Set title and create layout
-        self.setWindowTitle("Calkit Assistant")
-        self.layout = QHBoxLayout(self)
-        # Add Calkit logo
-        self.logo = QLabel()
-        # Left half: Setup
-        self.setup_widget = QWidget()
-        self.setup_layout = QVBoxLayout(self.setup_widget)
-        self.setup_layout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
-        self.setup_title = QLabel("System setup")
-        self.setup_title.setStyleSheet("font-weight: bold; font-size: 16px;")
-        self.setup_layout.setSpacing(0)
-        self.setup_title_bar = QWidget(self.setup_widget)
-        self.setup_title_bar_layout = QHBoxLayout(self.setup_title_bar)
-        self.setup_title_bar_layout.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-        self.setup_title_bar_layout.setContentsMargins(0, 0, 0, 0)
-        self.setup_title_bar_layout.setSpacing(0)
-        self.setup_title_bar_layout.addWidget(self.setup_title)
-        # Add refresh button to the setup title bar
-        self.refresh_setup_button = QPushButton(self.setup_title_bar)
-        self.refresh_setup_button.setIcon(QIcon.fromTheme("view-refresh"))
-        self.refresh_setup_button.setStyleSheet(
-            "padding: 0px; margin: 0px; margin-left: 2px; border: none;"
-        )
-        self.refresh_setup_button.setCursor(Qt.PointingHandCursor)
-        self.refresh_setup_button.setFixedSize(20, 30)
-        self.refresh_setup_button.setIconSize(QSize(16, 16))
-        self.refresh_setup_button.setToolTip("Refresh setup status")
-        self.refresh_setup_button.clicked.connect(self.refresh_setup_status)
-        self.setup_title_bar_layout.addWidget(self.refresh_setup_button)
-        self.setup_layout.addWidget(self.setup_title_bar)
-        # Add setup steps to the left section
-        print("Creating setup steps")
-        self.setup_step_widgets = make_setup_step_widgets()
-        for _, setup_step_widget in self.setup_step_widgets.items():
-            setup_step_widget.setMinimumHeight(20)
-            self.setup_layout.addWidget(setup_step_widget, stretch=0)
-        self.layout.addWidget(self.setup_widget)
-        # Right half: Projects
-        self.projects_widget = QWidget()
-        self.projects_layout = QVBoxLayout(self.projects_widget)
-        self.projects_layout.setAlignment(Qt.AlignTop)
-        self.projects_layout.setSpacing(0)
+class ProjectListWidget(QWidget):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.layout = QVBoxLayout(self)
+        self.layout.setAlignment(Qt.AlignTop)
+        self.layout.setSpacing(0)
         # Add projects title bar
-        self.projects_title_bar = QWidget(self.projects_widget)
-        self.projects_title_bar_layout = QHBoxLayout(self.projects_title_bar)
-        self.projects_title_bar_layout.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-        self.projects_title_bar_layout.setContentsMargins(0, 0, 0, 0)
-        self.projects_title_bar_layout.setSpacing(0)
-        self.projects_title = QLabel("Projects")
-        self.projects_title.setStyleSheet(
-            "font-weight: bold; font-size: 16px;"
-        )
-        self.projects_title_bar_layout.addWidget(self.projects_title)
+        self.title_bar = QWidget(self)
+        self.title_bar_layout = QHBoxLayout(self.title_bar)
+        self.title_bar_layout.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        self.title_bar_layout.setContentsMargins(0, 0, 0, 0)
+        self.title_bar_layout.setSpacing(0)
+        self.title = QLabel("Projects")
+        self.title.setStyleSheet("font-weight: bold; font-size: 16px;")
+        self.title_bar_layout.addWidget(self.title)
         # Add plus icon to add a new project
         # This needs to be disabled if:
         # - Calkit token is not set
@@ -1380,7 +1348,7 @@ class MainWindow(QWidget):
         # - Calkit is not installed
         # - GitHub credentials are not set?
         # TODO
-        self.new_project_button = QPushButton(self.projects_title_bar)
+        self.new_project_button = QPushButton(self.title_bar)
         self.new_project_button.setIcon(QIcon.fromTheme("list-add"))
         self.new_project_button.setStyleSheet(
             "padding: 0px; padding-top: 2px; margin: 0px; border: none;"
@@ -1390,9 +1358,9 @@ class MainWindow(QWidget):
         self.new_project_button.setIconSize(QSize(18, 18))
         self.new_project_button.setToolTip("Create new project")
         self.new_project_button.clicked.connect(self.create_new_project)
-        self.projects_title_bar_layout.addWidget(self.new_project_button)
+        self.title_bar_layout.addWidget(self.new_project_button)
         # Add refresh button to the projects title bar
-        self.refresh_projects_button = QPushButton(self.projects_title_bar)
+        self.refresh_projects_button = QPushButton(self.title_bar)
         self.refresh_projects_button.setIcon(QIcon.fromTheme("view-refresh"))
         self.refresh_projects_button.setStyleSheet(
             "padding: 0px; margin: 0px; border: none;"
@@ -1401,38 +1369,29 @@ class MainWindow(QWidget):
         self.refresh_projects_button.setFixedSize(18, 30)
         self.refresh_projects_button.setIconSize(QSize(16, 16))
         self.refresh_projects_button.setToolTip("Refresh projects")
-        self.refresh_projects_button.clicked.connect(self.refresh_project_list)
-        self.projects_title_bar_layout.addWidget(self.refresh_projects_button)
-        self.projects_layout.addWidget(self.projects_title_bar)
+        self.refresh_projects_button.clicked.connect(self.refresh)
+        self.title_bar_layout.addWidget(self.refresh_projects_button)
+        self.layout.addWidget(self.title_bar)
         # Add a list of folders with "open" icons
-        self.project_list_widget = QListWidget()
-        self.refresh_project_list()
-        self.project_list_widget.itemDoubleClicked.connect(
-            self.open_project_vs_code
-        )
+        self.list_widget = QListWidget()
+        self.refresh()
+        self.list_widget.itemDoubleClicked.connect(self.open_project_vs_code)
         # Add right-click context menu to the project list
-        self.project_list_widget.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.project_list_widget.customContextMenuRequested.connect(
+        self.list_widget.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.list_widget.customContextMenuRequested.connect(
             self.show_project_context_menu
         )
-        self.projects_layout.addWidget(self.project_list_widget)
-        # Add the projects widget to the layout
-        self.layout.addWidget(self.projects_widget)
+        self.layout.addWidget(self.list_widget)
 
-    def refresh_setup_status(self) -> None:
-        """Refresh the status of all setup steps."""
-        for _, step in self.setup_step_widgets.items():
-            step.refresh()
-
-    def refresh_project_list(self) -> None:
+    def refresh(self) -> None:
         """Refresh the project list by clearing and re-adding items."""
         print("Refreshing project list")
-        self.project_list_widget.clear()
+        self.list_widget.clear()
         self.projects = get_projects()
         self.projects_by_name = {}
         for project in self.projects:
             name = f"{project.owner_name}/{project.project_name}"
-            item = QListWidgetItem(self.project_list_widget)
+            item = QListWidgetItem(self.list_widget)
             widget = QWidget(self)
             layout = QHBoxLayout()
             layout.setAlignment(Qt.AlignLeft | Qt.AlignTop)
@@ -1458,27 +1417,13 @@ class MainWindow(QWidget):
             item.setSizeHint(widget.sizeHint())
             item.setData(Qt.UserRole, name)
             self.projects_by_name[name] = project
-            self.project_list_widget.addItem(item)
-            self.project_list_widget.setItemWidget(item, widget)
-
-    def open_project_vs_code(self, item) -> None:
-        # If VS Code is not installed, show error message dialog
-        if not self.setup_step_widgets["vscode"].installed:
-            print("VS Code is not installed")
-            QMessageBox.critical(
-                self,
-                "VS Code not installed",
-                "Please install VS Code first.",
-            )
-            return
-        project = self.projects_by_name[item.data(Qt.UserRole)]
-        cmd = f"code {project.wdir}"
-        subprocess.run(cmd, shell=True)
+            self.list_widget.addItem(item)
+            self.list_widget.setItemWidget(item, widget)
 
     def show_project_context_menu(self, position):
         """Show a context menu for the project list."""
         # Get the item at the clicked position
-        item = self.project_list_widget.itemAt(position)
+        item = self.list_widget.itemAt(position)
         if item is None:
             return  # Do nothing if no item was clicked
         project = self.projects_by_name[item.data(Qt.UserRole)]
@@ -1522,7 +1467,21 @@ class MainWindow(QWidget):
             lambda: webbrowser.open(project.git_repo_url)
         )
         # Execute the menu
-        menu.exec(self.project_list_widget.viewport().mapToGlobal(position))
+        menu.exec(self.list_widget.viewport().mapToGlobal(position))
+
+    def open_project_vs_code(self, item) -> None:
+        # If VS Code is not installed, show error message dialog
+        if not vs_code_installed():
+            print("VS Code is not installed")
+            QMessageBox.critical(
+                self,
+                "VS Code not installed",
+                "Please install VS Code first.",
+            )
+            return
+        project = self.projects_by_name[item.data(Qt.UserRole)]
+        cmd = f"code {project.wdir}"
+        subprocess.run(cmd, shell=True)
 
     def clone_project(self, item: QListWidgetItem) -> None:
         project_name = item.data(Qt.UserRole)
@@ -1537,7 +1496,7 @@ class MainWindow(QWidget):
         progress.show()
         thread = CloneThread(project_name=project_name, parent=self)
         thread.finished.connect(progress.close)
-        thread.finished.connect(self.refresh_project_list)
+        thread.finished.connect(self.refresh)
         thread.start()
 
     def open_project_folder(self, item: QListWidgetItem) -> None:
@@ -1578,10 +1537,69 @@ class MainWindow(QWidget):
         progress.close()
         if self.thread.success:
             # Refresh the project list
-            self.refresh_project_list()
+            self.refresh()
             QMessageBox.information(
                 self, "Success", "Project created successfully!"
             )
+
+
+class MainWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+        # Set title and create layout
+        self.setWindowTitle("Calkit Assistant")
+        self.layout = QHBoxLayout(self)
+        # Add Calkit logo
+        self.logo = QLabel()
+        # Left half: Setup
+        self.setup_widget = QWidget()
+        self.setup_layout = QVBoxLayout(self.setup_widget)
+        self.setup_layout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+        self.setup_title = QLabel("System setup")
+        self.setup_title.setStyleSheet("font-weight: bold; font-size: 16px;")
+        self.setup_layout.setSpacing(0)
+        self.setup_title_bar = QWidget(self.setup_widget)
+        self.setup_title_bar_layout = QHBoxLayout(self.setup_title_bar)
+        self.setup_title_bar_layout.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        self.setup_title_bar_layout.setContentsMargins(0, 0, 0, 0)
+        self.setup_title_bar_layout.setSpacing(0)
+        self.setup_title_bar_layout.addWidget(self.setup_title)
+        # Add refresh button to the setup title bar
+        self.refresh_setup_button = QPushButton(self.setup_title_bar)
+        self.refresh_setup_button.setIcon(QIcon.fromTheme("view-refresh"))
+        self.refresh_setup_button.setStyleSheet(
+            "padding: 0px; margin: 0px; margin-left: 2px; border: none;"
+        )
+        self.refresh_setup_button.setCursor(Qt.PointingHandCursor)
+        self.refresh_setup_button.setFixedSize(20, 30)
+        self.refresh_setup_button.setIconSize(QSize(16, 16))
+        self.refresh_setup_button.setToolTip("Refresh setup status")
+        self.refresh_setup_button.clicked.connect(self.refresh_setup_status)
+        self.setup_title_bar_layout.addWidget(self.refresh_setup_button)
+        self.setup_layout.addWidget(self.setup_title_bar)
+        # Add setup steps to the left section
+        print("Creating setup steps")
+        self.setup_step_widgets = make_setup_step_widgets()
+        for _, setup_step_widget in self.setup_step_widgets.items():
+            setup_step_widget.setMinimumHeight(20)
+            self.setup_layout.addWidget(setup_step_widget, stretch=0)
+        self.layout.addWidget(self.setup_widget)
+        # Right half: Projects
+        self.projects_widget = ProjectListWidget(self)
+        # Refresh projects widget on Calkit install or token set
+        self.setup_step_widgets["calkit"].just_installed.connect(
+            self.projects_widget.refresh
+        )
+        self.setup_step_widgets["calkit-token"].just_set.connect(
+            self.projects_widget.refresh
+        )
+        # Add the projects widget to the layout
+        self.layout.addWidget(self.projects_widget)
+
+    def refresh_setup_status(self) -> None:
+        """Refresh the status of all setup steps."""
+        for _, step in self.setup_step_widgets.items():
+            step.refresh()
 
 
 def run():
