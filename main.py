@@ -656,8 +656,11 @@ class GitInstall(DependencyInstall):
     @property
     def installed(self) -> bool:
         if get_platform() == "windows":
-            process = run_in_git_bash("git --version")
-            return process.returncode == 0
+            try:
+                run_in_git_bash("git --version", check=True)
+                return True
+            except Exception:
+                return False
         return check_dep_exists("git")
 
     @property
@@ -832,15 +835,13 @@ class CondaInit(QWidget):
         if platform == "windows":
             print("Checking that Git Bash can run Conda")
             try:
-                process = run_in_git_bash("conda --version")
-                process.check_returncode()
+                run_in_git_bash("conda --version", check=True)
             except Exception as e:
                 print(f"Failed to run Conda in Git Bash: {e}")
                 return False
             print("Checking that Powershell can run Conda")
             try:
-                process = run_in_powershell("conda --version")
-                process.check_returncode()
+                run_in_powershell("conda --version", check=True)
             except Exception as e:
                 print(f"Failed to run Conda in Powershell: {e}")
                 return False
