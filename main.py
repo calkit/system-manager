@@ -1065,18 +1065,10 @@ class NewProjectDialog(QDialog):
         self.description_input = QLineEdit()
         self.layout.addWidget(self.description_label)
         self.layout.addWidget(self.description_input)
-        # Checkbox for whether or not we want to create in the cloud
-        self.cloud_checkbox = QCheckBox("Create in the cloud")
-        self.cloud_checkbox.setChecked(True)
-        self.layout.addWidget(self.cloud_checkbox)
         # Checkbox for whether or not we want to make this public, which is
         # only possible if we are creating in the cloud
-        self.public_checkbox = QCheckBox("Make cloud project public")
+        self.public_checkbox = QCheckBox("Make project public")
         self.public_checkbox.setChecked(True)
-        self.public_checkbox.setEnabled(True)
-        self.cloud_checkbox.toggled.connect(
-            lambda checked: self.public_checkbox.setEnabled(checked)
-        )
         self.layout.addWidget(self.public_checkbox)
         # Buttons
         self.button_layout = QHBoxLayout()
@@ -1118,7 +1110,7 @@ class NewProjectDialog(QDialog):
             "title": self.project_title_input.text(),
             "name": self.project_name_input.text(),
             "description": self.description_input.text(),
-            "cloud": self.cloud_checkbox.isChecked(),
+            "cloud": True,  # Don't make this optional
             "public": self.public_checkbox.isChecked(),
         }
 
