@@ -449,16 +449,7 @@ class DependencyInstall(QWidget, metaclass=QWidgetABCMeta):
 
     def finish_install(self):
         """After attempting to install, run this."""
-        self.refresh()
-        for step in self.child_steps:
-            step.refresh()
-        self.just_installed.emit()
-        if not self.installed:
-            QMessageBox.critical(
-                self,
-                "Installation failed",
-                "Installation failed.",
-            )
+        relaunch_application()
 
 
 class HomebrewInstall(DependencyInstall):
