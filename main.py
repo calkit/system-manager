@@ -773,6 +773,7 @@ class CondaInit(QWidget):
         print("Refreshing Conda init status")
         is_done = self.is_done
         if not is_done:
+            self.label.setText(self.txt_not_set)
             if self.run_button is None:
                 self.run_button = QPushButton(self)
                 self.run_button.setText("🪄")
