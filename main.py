@@ -768,7 +768,7 @@ class CondaInit(QWidget):
         # Show the menu at the cursor position
         menu.exec(self.mapToGlobal(position))
 
-    def refresh(self) -> None:
+    def refresh(self) -> bool:
         """Refresh the widget's display to reflect completion."""
         print("Refreshing Conda init status")
         is_done = self.is_done
@@ -794,6 +794,7 @@ class CondaInit(QWidget):
                 self.run_button = None
             # Update label to show it's done
             self.label.setText(self.txt_set)
+        return is_done
 
     @property
     def is_done(self) -> bool:
@@ -836,7 +837,8 @@ class CondaInit(QWidget):
             conda_exe = os.path.join(find_conda_prefix(), "bin", "conda")
             cmd = [conda_exe, "init"]
             subprocess.run(cmd)
-        if not self.is_done:
+        is_done = self.refresh()
+        if is_done:
             QMessageBox.critical(
                 self,
                 "Conda init failed",
