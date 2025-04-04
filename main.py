@@ -935,7 +935,8 @@ def make_setup_step_widgets() -> dict[str, QWidget]:
     # TODO: Ensure Docker permissions are set on Linux
     # TODO: Ensure we have GitHub credentials?
     # Install Miniforge and check that shell is initialized
-    calkit_install = CalkitInstall()
+    calkit_token = CalkitToken()
+    calkit_install = CalkitInstall(child_steps=[calkit_token])
     conda_init = CondaInit()
     steps["miniforge"] = CondaInstall(child_steps=[conda_init, calkit_install])
     steps["conda-init"] = conda_init
@@ -944,7 +945,7 @@ def make_setup_step_widgets() -> dict[str, QWidget]:
     # Install Calkit inside Miniforge base environment
     steps["calkit"] = calkit_install
     # Ensure Calkit token is set
-    steps["calkit-token"] = CalkitToken()
+    steps["calkit-token"] = calkit_token
     # Install VS Code
     steps["vscode"] = VSCodeInstall()
     # TODO: Install recommended VS Code extensions
