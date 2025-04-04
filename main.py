@@ -28,7 +28,7 @@ import git.exc
 import requests
 import ruamel.yaml
 from pydantic import BaseModel
-from PySide6.QtCore import QSize, Qt, QThread, QTimer, Signal
+from PySide6.QtCore import QSize, Qt, QThread, Signal
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
     QApplication,
@@ -1102,8 +1102,11 @@ class NewProjectDialog(QDialog):
         """Validate the form data on each edit, disabling the submit button
         until it's okay.
         """
-        # Check if the project name is empty
-        if not self.project_name_input.text():
+        # Check if the project title or name is empty
+        if (
+            not self.project_name_input.text()
+            or not self.project_title_input.text()
+        ):
             self.ok_button.setEnabled(False)
             return
         # If both are valid, enable the button
@@ -1113,7 +1116,7 @@ class NewProjectDialog(QDialog):
         """Retrieve the form data."""
         return {
             "title": self.project_title_input.text(),
-            "project_name": self.project_name_input.text(),
+            "name": self.project_name_input.text(),
             "description": self.description_input.text(),
             "cloud": self.cloud_checkbox.isChecked(),
             "public": self.public_checkbox.isChecked(),
@@ -1258,6 +1261,49 @@ class InstallThread(QThread):
         for subcommand in subcommands:
             print("Running", subcommand)
             subprocess.run(subcommand)
+
+
+class NewProjectThread(QThread):
+    """A thread to create a new project."""
+
+    def __init__(self, project_data: dict, **kwargs):
+        super().__init__(**kwargs)
+        self.project_data = project_data
+        self.success = None
+
+    def run(self) -> None:
+        """Run `calkit new project` to create the project.
+
+        If we just installed or initialized conda in this process and it
+        wasn't previously, Calkit and DVC will not be on the path,
+        so we need to be careful about that.
+        """
+        cmd = f"calkit new project {self.project_data['name']} "
+        if title := self.project_data["title"]:
+            cmd += f"--title '{title}' "
+        if description := self.project_data["description"]:
+            cmd += f"--description '{description}' "
+        if self.project_data["cloud"]:
+            cmd += "--cloud "
+            if self.project_data["public"]:
+                cmd += "--public "
+        platform = get_platform()
+        wdir = os.path.join(os.path.expanduser("~"), "calkit")
+        os.makedirs(wdir, exist_ok=True)
+        print("Running command:", cmd)
+        if platform == "windows":
+            self.process = run_in_powershell(cmd, wdir=wdir)
+        else:
+            self.process = subprocess.run(cmd, cwd=wdir, shell=True)
+        if self.process.returncode != 0:
+            self.success = False
+            QMessageBox.critical(
+                self.parent,
+                "Failed",
+                "Failed to create project",
+            )
+        else:
+            self.success = True
 
 
 class MainWindow(QWidget):
@@ -1500,8 +1546,7 @@ class MainWindow(QWidget):
         dialog = NewProjectDialog()
         if dialog.exec() == QDialog.Accepted:
             form_data = dialog.get_form_data()
-            project_name = form_data["project_name"]
-            # TODO: Create the project using the CLI method
+            project_name = form_data["name"]
             # Show a progress dialog while the project is being created
             progress = QProgressDialog(
                 f"Creating {project_name}...", None, 0, 0, self
@@ -1512,19 +1557,21 @@ class MainWindow(QWidget):
             progress.setRange(0, 0)  # Indeterminate progress
             progress.show()
             # Close the progress dialog
-            # Use QTimer to simulate a delay without blocking the event loop
-            QTimer.singleShot(
-                2000, lambda: self.finish_project_creation(progress)
+            self.thread = NewProjectThread(project_data=form_data, parent=self)
+            self.thread.finished.connect(
+                lambda: self.finish_project_creation(progress)
             )
+            self.thread.start()
 
     def finish_project_creation(self, progress: QProgressDialog) -> None:
         """Finish the project creation process."""
         progress.close()
-        # Refresh the project list
-        self.refresh_project_list()
-        QMessageBox.information(
-            self, "Success", "Project created successfully!"
-        )
+        if self.thread.success:
+            # Refresh the project list
+            self.refresh_project_list()
+            QMessageBox.information(
+                self, "Success", "Project created successfully!"
+            )
 
 
 def run():
