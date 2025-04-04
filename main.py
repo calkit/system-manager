@@ -327,7 +327,15 @@ class DependencyInstall(QWidget, metaclass=QWidgetABCMeta):
             self.txt_installed if installed else self.txt_not_installed
         )
         self.layout.addWidget(self.label)
-        if not installed:
+        self.install_button = None
+        self.refresh()
+
+    def refresh(self) -> None:
+        """Refresh the widget, e.g., if it's been installed and we want to
+        update the check mark display.
+        """
+        installed = self.installed
+        if not installed and self.install_button is None:
             self.install_button = QPushButton("⬇️")
             self.install_button.setCursor(Qt.PointingHandCursor)
             self.install_button.setToolTip("Install")
@@ -337,6 +345,15 @@ class DependencyInstall(QWidget, metaclass=QWidgetABCMeta):
             )
             self.install_button.clicked.connect(self.install)
             self.layout.addWidget(self.install_button)
+        else:
+            if self.install_button is not None:
+                self.layout.removeWidget(self.install_button)
+                self.install_button.deleteLater()
+                self.install_button = None
+            # Update label to show installed
+            self.label.setText(self.txt_installed)
+            for step in self.child_steps:
+                step.setEnabled(True)
 
     @property
     @abstractmethod
@@ -376,16 +393,8 @@ class DependencyInstall(QWidget, metaclass=QWidgetABCMeta):
 
     def finish_install(self):
         """After attempting to install, run this."""
-        installed = self.installed
-        if installed:
-            self.layout.removeWidget(self.install_button)
-            self.install_button.deleteLater()
-            self.install_button = None
-            # Update label to show installed
-            self.label.setText(self.txt_installed)
-            for step in self.child_steps:
-                step.setEnabled(True)
-        else:
+        self.refresh()
+        if not self.installed:
             QMessageBox.critical(
                 self,
                 "Installation failed",
