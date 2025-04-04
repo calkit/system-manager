@@ -856,7 +856,20 @@ class CalkitInstall(DependencyInstall):
     @property
     def install_command(self) -> list[str]:
         pip_exe = os.path.join(get_conda_scripts_dir(), "pip")
-        return [pip_exe, "install", "--upgrade", "calkit-python"]
+        conda_exe = os.path.join(get_conda_scripts_dir(), "conda")
+        return [
+            pip_exe,
+            "install",
+            "--upgrade",
+            "calkit-python",
+            "&&",
+            conda_exe,
+            "install",
+            "-y",
+            "-c",
+            "conda-forge",
+            "libsqlite=3.48.0",
+        ]
 
 
 class UvInstall(DependencyInstall):
