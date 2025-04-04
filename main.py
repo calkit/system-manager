@@ -1200,11 +1200,29 @@ class MainWindow(QWidget):
         # Left half: Setup
         self.setup_widget = QWidget()
         self.setup_layout = QVBoxLayout(self.setup_widget)
-        self.setup_layout.setAlignment(Qt.AlignTop)
-        self.setup_layout.setSpacing(0)
+        self.setup_layout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
         self.setup_title = QLabel("System setup")
         self.setup_title.setStyleSheet("font-weight: bold; font-size: 16px;")
-        self.setup_layout.addWidget(self.setup_title)
+        self.setup_layout.setSpacing(0)
+        self.setup_title_bar = QWidget(self.setup_widget)
+        self.setup_title_bar_layout = QHBoxLayout(self.setup_title_bar)
+        self.setup_title_bar_layout.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        self.setup_title_bar_layout.setContentsMargins(0, 0, 0, 0)
+        self.setup_title_bar_layout.setSpacing(0)
+        self.setup_title_bar_layout.addWidget(self.setup_title)
+        # Add refresh button to the setup title bar
+        self.refresh_setup_button = QPushButton(self.setup_title_bar)
+        self.refresh_setup_button.setIcon(QIcon.fromTheme("view-refresh"))
+        self.refresh_setup_button.setStyleSheet(
+            "padding: 0px; margin: 0px; margin-left: 2px; border: none;"
+        )
+        self.refresh_setup_button.setCursor(Qt.PointingHandCursor)
+        self.refresh_setup_button.setFixedSize(20, 30)
+        self.refresh_setup_button.setIconSize(QSize(16, 16))
+        self.refresh_setup_button.setToolTip("Refresh setup status")
+        self.refresh_setup_button.clicked.connect(self.refresh_setup_status)
+        self.setup_title_bar_layout.addWidget(self.refresh_setup_button)
+        self.setup_layout.addWidget(self.setup_title_bar)
         # Add setup steps to the left section
         print("Creating setup steps")
         self.setup_step_widgets = make_setup_step_widgets()
@@ -1238,8 +1256,7 @@ class MainWindow(QWidget):
         self.new_project_button = QPushButton(self.projects_title_bar)
         self.new_project_button.setIcon(QIcon.fromTheme("list-add"))
         self.new_project_button.setStyleSheet(
-            "font-size: 10px; padding: 0px; padding-top: 2px; margin: 0px; "
-            "border: none;"
+            "padding: 0px; padding-top: 2px; margin: 0px; border: none;"
         )
         self.new_project_button.setCursor(Qt.PointingHandCursor)
         self.new_project_button.setFixedSize(30, 30)
@@ -1251,7 +1268,7 @@ class MainWindow(QWidget):
         self.refresh_projects_button = QPushButton(self.projects_title_bar)
         self.refresh_projects_button.setIcon(QIcon.fromTheme("view-refresh"))
         self.refresh_projects_button.setStyleSheet(
-            "font-size: 10px; padding: 0px; margin: 0px; border: none;"
+            "padding: 0px; margin: 0px; border: none;"
         )
         self.refresh_projects_button.setCursor(Qt.PointingHandCursor)
         self.refresh_projects_button.setFixedSize(18, 30)
@@ -1274,6 +1291,11 @@ class MainWindow(QWidget):
         self.projects_layout.addWidget(self.project_list_widget)
         # Add the projects widget to the layout
         self.layout.addWidget(self.projects_widget)
+
+    def refresh_setup_status(self) -> None:
+        """Refresh the status of all setup steps."""
+        for _, step in self.setup_step_widgets.items():
+            step.refresh()
 
     def refresh_project_list(self) -> None:
         """Refresh the project list by clearing and re-adding items."""
