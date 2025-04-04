@@ -890,7 +890,7 @@ class CondaInit(QWidget):
             cmd = [conda_exe, "init"]
             subprocess.run(cmd)
         is_done = self.refresh()
-        if is_done:
+        if not is_done:
             QMessageBox.critical(
                 self,
                 "Conda init failed",
