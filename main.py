@@ -33,6 +33,7 @@ from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
+    QComboBox,
     QDialog,
     QHBoxLayout,
     QInputDialog,
@@ -1065,6 +1066,17 @@ class NewProjectDialog(QDialog):
         self.description_input = QLineEdit()
         self.layout.addWidget(self.description_label)
         self.layout.addWidget(self.description_input)
+        # Add dropdown menu for selecting a project template
+        self.template_label = QLabel("Template:")
+        self.template_combo = QComboBox()
+        self.template_combo.addItems(
+            [
+                "calkit/example-basic",
+                "None",
+            ]
+        )
+        self.layout.addWidget(self.template_label)
+        self.layout.addWidget(self.template_combo)
         # Checkbox for whether or not we want to make this public, which is
         # only possible if we are creating in the cloud
         self.public_checkbox = QCheckBox("Make project public")
@@ -1112,6 +1124,7 @@ class NewProjectDialog(QDialog):
             "description": self.description_input.text(),
             "cloud": True,  # Don't make this optional
             "public": self.public_checkbox.isChecked(),
+            "template": self.template_combo.currentText(),
         }
 
 
@@ -1275,6 +1288,9 @@ class NewProjectThread(QThread):
             cmd += f"--title '{title}' "
         if description := self.project_data["description"]:
             cmd += f"--description '{description}' "
+        template = self.project_data["template"]
+        if template != "None":
+            cmd += f"--template {template} "
         if self.project_data["cloud"]:
             cmd += "--cloud "
             if self.project_data["public"]:
