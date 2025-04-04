@@ -10,6 +10,7 @@ import glob
 import itertools
 import os
 import platform
+import re
 import shutil
 import subprocess
 import sys
@@ -50,6 +51,11 @@ ryaml = ruamel.yaml.YAML()
 ryaml.indent(mapping=2, sequence=4, offset=2)
 ryaml.preserve_quotes = True
 ryaml.width = 70
+
+
+def to_kebab_case(str) -> str:
+    """Convert a string to kebab-case."""
+    return re.sub(r"[-_,\.\ ]", "-", str.lower())
 
 
 def check_dep_exists(name: str) -> bool:
@@ -1040,7 +1046,15 @@ class NewProjectDialog(QDialog):
         self.setWindowTitle("Create new project")
         # Main layout
         self.layout = QVBoxLayout(self)
-        # Project Name
+        # Project title
+        self.project_title_label = QLabel("Title:")
+        self.project_title_input = QLineEdit()
+        self.project_title_input.textChanged.connect(
+            self.update_project_name_from_title
+        )
+        self.layout.addWidget(self.project_title_label)
+        self.layout.addWidget(self.project_title_input)
+        # Project name
         self.project_name_label = QLabel("Name:")
         self.project_name_input = QLineEdit()
         self.layout.addWidget(self.project_name_label)
@@ -1065,6 +1079,11 @@ class NewProjectDialog(QDialog):
         self.description_input.textChanged.connect(self.validate)
         self.ok_button.setEnabled(False)
 
+    def update_project_name_from_title(self) -> None:
+        title_txt = self.project_title_input.text()
+        name_txt = to_kebab_case(title_txt)
+        self.project_name_input.setText(name_txt)
+
     def validate(self) -> None:
         """Validate the form data on each edit, disabling the submit button
         until it's okay.
@@ -1079,6 +1098,7 @@ class NewProjectDialog(QDialog):
     def get_form_data(self):
         """Retrieve the form data."""
         return {
+            "title": self.project_title_input.text(),
             "project_name": self.project_name_input.text(),
             "description": self.description_input.text(),
         }
