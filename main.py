@@ -337,12 +337,7 @@ class DependencyInstall(QWidget, metaclass=QWidgetABCMeta):
         self.layout = make_setup_step_layout(self)
         self.txt_installed = f"Install {self.dependency_name}: ✅"
         self.txt_not_installed = f"Install {self.dependency_name}: ❌"
-        installed = self.installed
-        for step in self.child_steps:
-            step.setEnabled(installed)
-        self.label = QLabel(
-            self.txt_installed if installed else self.txt_not_installed
-        )
+        self.label = QLabel()
         self.layout.addWidget(self.label)
         self.install_button = None
         self.refresh()
@@ -362,16 +357,20 @@ class DependencyInstall(QWidget, metaclass=QWidgetABCMeta):
         """
         print(f"Refreshing {self.dependency_name} install status")
         installed = self.installed
-        if not installed and self.install_button is None:
-            self.install_button = QPushButton("⬇️")
-            self.install_button.setCursor(Qt.PointingHandCursor)
-            self.install_button.setToolTip("Install")
-            self.install_button.setFixedSize(18, 18)
-            self.install_button.setStyleSheet(
-                "font-size: 12px; padding: 0px; margin: 0px; border: none;"
-            )
-            self.install_button.clicked.connect(self.install)
-            self.layout.addWidget(self.install_button)
+        for step in self.child_steps:
+            step.setEnabled(installed)
+        if not installed:
+            self.label.setText(self.txt_not_installed)
+            if self.install_button is None:
+                self.install_button = QPushButton("⬇️")
+                self.install_button.setCursor(Qt.PointingHandCursor)
+                self.install_button.setToolTip("Install")
+                self.install_button.setFixedSize(18, 18)
+                self.install_button.setStyleSheet(
+                    "font-size: 12px; padding: 0px; margin: 0px; border: none;"
+                )
+                self.install_button.clicked.connect(self.install)
+                self.layout.addWidget(self.install_button)
         elif installed:
             if self.install_button is not None:
                 self.layout.removeWidget(self.install_button)
@@ -379,8 +378,6 @@ class DependencyInstall(QWidget, metaclass=QWidgetABCMeta):
                 self.install_button = None
             # Update label to show installed
             self.label.setText(self.txt_installed)
-            for step in self.child_steps:
-                step.setEnabled(True)
 
     @property
     @abstractmethod
