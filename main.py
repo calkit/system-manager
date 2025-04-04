@@ -288,6 +288,12 @@ class CalkitToken(QWidget):
         self.layout.addWidget(self.label)
         self.layout.addWidget(self.update_button)
 
+    def refresh(self) -> None:
+        if self.is_set:
+            self.label.setText(self.txt_set)
+        else:
+            self.label.setText(self.txt_not_set)
+
     @property
     def is_set(self) -> bool:
         return bool(get_calkit_token())
@@ -304,7 +310,7 @@ class CalkitToken(QWidget):
             exe = os.path.join(get_conda_scripts_dir(), "calkit")
             cmd = [exe, "config", "set", "token", text]
             subprocess.check_call(cmd)
-            self.label.setText(self.txt_set)
+            self.refresh()
 
 
 class QWidgetABCMeta(ABCMeta, type(QWidget)):
@@ -674,6 +680,12 @@ class GitConfigStep(QWidget):
         self.layout.addWidget(self.update_button, stretch=0)
         self.update_button.clicked.connect(self.open_dialog)
 
+    def refresh(self) -> None:
+        if self.value:
+            self.label.setText(self.txt_set)
+        else:
+            self.label.setText(self.txt_not_set)
+
     @property
     def cmd(self) -> list[str]:
         cmd = ["git", "config", "--global"]
@@ -701,7 +713,7 @@ class GitConfigStep(QWidget):
         )
         if ok and text:
             subprocess.run(self.cmd + [self.key, text])
-            self.label.setText(self.txt_set)
+            self.refresh()
 
 
 class CondaInit(QWidget):
