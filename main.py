@@ -288,6 +288,11 @@ def make_setup_step_layout(widget: QWidget) -> QHBoxLayout:
     return layout
 
 
+def relaunch_application():
+    """Relaunch this app."""
+    os.execl(sys.executable, sys.executable, *sys.argv)
+
+
 class CalkitToken(QWidget):
     """A widget to set the Calkit token."""
 
@@ -593,6 +598,9 @@ class DockerInstall(DependencyInstall):
 
     @property
     def installed(self) -> bool:
+        if get_platform() == "windows":
+            process = run_in_powershell("docker --version")
+            return process.returncode == 0
         return check_dep_exists("docker")
 
     @property
