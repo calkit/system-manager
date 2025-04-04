@@ -1115,6 +1115,8 @@ class NewProjectDialog(QDialog):
             "title": self.project_title_input.text(),
             "project_name": self.project_name_input.text(),
             "description": self.description_input.text(),
+            "cloud": self.cloud_checkbox.isChecked(),
+            "public": self.public_checkbox.isChecked(),
         }
 
 
