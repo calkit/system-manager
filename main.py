@@ -372,7 +372,7 @@ class DependencyInstall(QWidget, metaclass=QWidgetABCMeta):
             )
             self.install_button.clicked.connect(self.install)
             self.layout.addWidget(self.install_button)
-        else:
+        elif installed:
             if self.install_button is not None:
                 self.layout.removeWidget(self.install_button)
                 self.install_button.deleteLater()
