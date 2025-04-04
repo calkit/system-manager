@@ -271,6 +271,7 @@ class CalkitToken(QWidget):
 
     def __init__(self):
         super().__init__()
+        print("Checking Calkit token status")
         is_set = self.is_set
         self.txt_not_set = "Set Calkit Cloud API token: ❌"
         self.txt_set = "Set Calkit Cloud API token: ✅"
@@ -289,6 +290,7 @@ class CalkitToken(QWidget):
         self.layout.addWidget(self.update_button)
 
     def refresh(self) -> None:
+        print("Refreshing Calkit token status")
         if self.is_set:
             self.label.setText(self.txt_set)
         else:
@@ -335,11 +337,21 @@ class DependencyInstall(QWidget, metaclass=QWidgetABCMeta):
         self.layout.addWidget(self.label)
         self.install_button = None
         self.refresh()
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.show_context_menu)
+
+    def show_context_menu(self, position):
+        """Show a context menu at the given position."""
+        menu = QMenu(self)
+        menu.addAction("Refresh", self.refresh)
+        # Show the menu at the cursor position
+        menu.exec(self.mapToGlobal(position))
 
     def refresh(self) -> None:
         """Refresh the widget, e.g., if it's been installed and we want to
         update the check mark display.
         """
+        print(f"Refreshing {self.dependency_name} install status")
         installed = self.installed
         if not installed and self.install_button is None:
             self.install_button = QPushButton("⬇️")
@@ -655,6 +667,7 @@ class WSLGitInstall(DependencyInstall):
 class GitConfigStep(QWidget):
     def __init__(self, key: str, pretty_name: str, wsl: bool = False) -> None:
         super().__init__()
+        print(f"Checking Git {key} config status")
         self.key = key
         self.pretty_name = pretty_name
         self.wsl = wsl
@@ -681,6 +694,7 @@ class GitConfigStep(QWidget):
         self.update_button.clicked.connect(self.open_dialog)
 
     def refresh(self) -> None:
+        print(f"Refreshing Git {self.key} config status")
         if self.value:
             self.label.setText(self.txt_set)
         else:
@@ -854,28 +868,23 @@ def make_setup_step_widgets() -> dict[str, QWidget]:
     # if not
     platform = get_platform()
     if platform == "mac":
-        print("Adding Homebrew install widget")
         steps["homebrew"] = HomebrewInstall()
     elif platform == "windows":
-        print("Adding WSL install widget")
         wsl_install = WSLInstall()
         steps["wsl"] = wsl_install
     # Install and configure Git
-    print("Adding Git config widgets")
     git_user_name = GitConfigStep(
         key="user.name", pretty_name="full name", wsl=False
     )
     git_user_email = GitConfigStep(
         key="user.email", pretty_name="email address", wsl=False
     )
-    print("Adding Git install widget")
     git_install = GitInstall(child_steps=[git_user_name, git_user_email])
     steps["git"] = git_install
     steps["git-user"] = git_user_name
     steps["git-email"] = git_user_email
     # TODO: Install everything in WSL if on Windows?
     # Install Docker
-    print("Adding Docker install widget")
     steps["docker"] = DockerInstall()
     # TODO: Ensure Docker is running
     # We can use `docker desktop status` and `docker desktop start` for this
@@ -883,23 +892,17 @@ def make_setup_step_widgets() -> dict[str, QWidget]:
     # TODO: Ensure Docker permissions are set on Linux
     # TODO: Ensure we have GitHub credentials?
     # Install Miniforge and check that shell is initialized
-    print("Adding Calkit install widget")
     calkit_install = CalkitInstall()
-    print("Adding Conda init widget")
     conda_init = CondaInit()
-    print("Adding Conda install widget")
     steps["miniforge"] = CondaInstall(child_steps=[conda_init, calkit_install])
     steps["conda-init"] = conda_init
     # Install uv
-    print("Adding uv install widget")
     steps["uv"] = UvInstall()
     # Install Calkit inside Miniforge base environment
     steps["calkit"] = calkit_install
     # Ensure Calkit token is set
-    print("Adding Calkit token widget")
     steps["calkit-token"] = CalkitToken()
     # Install VS Code
-    print("Adding VS Code install widget")
     steps["vscode"] = VSCodeInstall()
     # TODO: Install recommended VS Code extensions
     return steps
