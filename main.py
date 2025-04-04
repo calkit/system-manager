@@ -245,6 +245,7 @@ def run_in_powershell(
     as_admin: bool = False,
     capture_output: bool = False,
     check: bool = False,
+    wdir: str | None = None,
 ) -> subprocess.CompletedProcess:
     if as_admin:
         cmd = f"Start-Process PowerShell -Verb RunAs -ArgumentList '{cmd}'"
@@ -252,6 +253,7 @@ def run_in_powershell(
         ["powershell", "-Command", cmd],
         capture_output=capture_output,
         check=check,
+        cwd=wdir,
     )
 
 
@@ -1081,17 +1083,28 @@ class NewProjectDialog(QDialog):
         }
 
 
-class SubprocessThread(QThread):
-    """A thread to run a subprocess."""
+class CloneThread(QThread):
+    """A thread to clone a project."""
 
-    def __init__(self, cmd: list[str], wdir: str = None, **kwargs):
+    def __init__(self, project_name: str, **kwargs):
         super().__init__(**kwargs)
-        self.cmd = cmd
-        self.wdir = wdir
+        self.project_name = project_name
 
     def run(self) -> None:
-        """Run the subprocess."""
-        self.process = subprocess.run(self.cmd, cwd=self.wdir)
+        """Run Calkit in a subprocess to clone the project.
+
+        If we just installed or initialized conda in this process and it
+        wasn't previously, Calkit and DVC will not be on the path,
+        so we need to be careful about that.
+        """
+        cmd = f"calkit clone {self.project_name}"
+        platform = get_platform()
+        wdir = os.path.join(os.path.expanduser("~"), "calkit")
+        os.makedirs(wdir, exist_ok=True)
+        if platform == "windows":
+            self.process = run_in_powershell(cmd, wdir=wdir)
+        else:
+            self.process = subprocess.run(cmd, cwd=wdir, shell=True)
         if self.process.returncode != 0:
             QMessageBox.critical(
                 self.parent, "Failed to clone", self.process.stdout.decode()
@@ -1420,10 +1433,6 @@ class MainWindow(QWidget):
 
     def clone_project(self, item: QListWidgetItem) -> None:
         project_name = item.data(Qt.UserRole)
-        exe = os.path.join(get_conda_scripts_dir(), "calkit")
-        cmd = [exe, "clone", project_name]
-        wdir = os.path.join(os.path.expanduser("~"), "calkit")
-        os.makedirs(wdir, exist_ok=True)
         # Clone in a thread with a progress dialog
         progress = QProgressDialog(
             f"Cloning {project_name}...", None, 0, 0, self
@@ -1433,7 +1442,7 @@ class MainWindow(QWidget):
         progress.setMinimumDuration(0)  # Show immediately
         progress.setRange(0, 0)  # Indeterminate progress
         progress.show()
-        thread = SubprocessThread(cmd=cmd, wdir=wdir, parent=self)
+        thread = CloneThread(project_name=project_name, parent=self)
         thread.finished.connect(progress.close)
         thread.finished.connect(self.refresh_project_list)
         thread.start()
