@@ -754,10 +754,9 @@ class CondaInit(QWidget):
     def __init__(self):
         super().__init__()
         self.layout = make_setup_step_layout(self)
-        is_done = self.is_done
         self.txt_not_set = "Run conda init: ❌"
         self.txt_set = "Run conda init: ✅"
-        self.label = QLabel(self.txt_set if is_done else self.txt_not_set)
+        self.label = QLabel()
         self.layout.addWidget(self.label)
         self.run_button = None
         self.refresh()
