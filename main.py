@@ -715,17 +715,33 @@ class CondaInit(QWidget):
         self.txt_set = "Run conda init: ✅"
         self.label = QLabel(self.txt_set if is_done else self.txt_not_set)
         self.layout.addWidget(self.label)
+        self.run_button = None
+        self.refresh()
+
+    def refresh(self) -> None:
+        """Refresh the widget's display to reflect completion."""
+        is_done = self.is_done
         if not is_done:
-            self.run_button = QPushButton(self)
-            self.run_button.setText("🪄")
-            self.run_button.setCursor(Qt.PointingHandCursor)
-            self.run_button.setStyleSheet(
-                "font-size: 12px; padding: 0px; margin: 0px; border: none;"
-            )
-            self.run_button.setFixedSize(18, 18)
-            self.run_button.setToolTip("Run conda init")
-            self.run_button.clicked.connect(self.run_conda_init)
-            self.layout.addWidget(self.run_button)
+            if self.run_button is None:
+                self.run_button = QPushButton(self)
+                self.run_button.setText("🪄")
+                self.run_button.setCursor(Qt.PointingHandCursor)
+                self.run_button.setStyleSheet(
+                    "font-size: 12px; padding: 0px; margin: 0px; border: none;"
+                )
+                self.run_button.setFixedSize(18, 18)
+                self.run_button.setToolTip("Run conda init")
+                self.run_button.clicked.connect(self.run_conda_init)
+                self.layout.addWidget(self.run_button)
+            else:
+                self.run_button.setEnabled(True)
+        else:
+            if self.run_button is not None:
+                self.layout.removeWidget(self.run_button)
+                self.run_button.deleteLater()
+                self.run_button = None
+            # Update label to show it's done
+            self.label.setText(self.txt_set)
 
     @property
     def is_done(self) -> bool:
@@ -768,14 +784,7 @@ class CondaInit(QWidget):
             conda_exe = os.path.join(find_conda_prefix(), "bin", "conda")
             cmd = [conda_exe, "init"]
             subprocess.run(cmd)
-        if self.is_done:
-            self.layout.removeWidget(self.run_button)
-            self.run_button.deleteLater()
-            self.run_button = None
-            # Update label to show it's done
-            self.label.setText(self.txt_set)
-        else:
-            self.run_button.setEnabled(True)
+        if not self.is_done:
             QMessageBox.critical(
                 self,
                 "Conda init failed",
