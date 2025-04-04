@@ -288,6 +288,15 @@ class CalkitToken(QWidget):
         self.update_button.clicked.connect(self.open_dialog)
         self.layout.addWidget(self.label)
         self.layout.addWidget(self.update_button)
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.show_context_menu)
+
+    def show_context_menu(self, position):
+        """Show a context menu at the given position."""
+        menu = QMenu(self)
+        menu.addAction("Refresh", self.refresh)
+        # Show the menu at the cursor position
+        menu.exec(self.mapToGlobal(position))
 
     def refresh(self) -> None:
         print("Refreshing Calkit token status")
@@ -692,6 +701,15 @@ class GitConfigStep(QWidget):
         self.layout.addWidget(self.label)
         self.layout.addWidget(self.update_button, stretch=0)
         self.update_button.clicked.connect(self.open_dialog)
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.show_context_menu)
+
+    def show_context_menu(self, position):
+        """Show a context menu at the given position."""
+        menu = QMenu(self)
+        menu.addAction("Refresh", self.refresh)
+        # Show the menu at the cursor position
+        menu.exec(self.mapToGlobal(position))
 
     def refresh(self) -> None:
         print(f"Refreshing Git {self.key} config status")
@@ -743,9 +761,19 @@ class CondaInit(QWidget):
         self.layout.addWidget(self.label)
         self.run_button = None
         self.refresh()
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.show_context_menu)
+
+    def show_context_menu(self, position):
+        """Show a context menu at the given position."""
+        menu = QMenu(self)
+        menu.addAction("Refresh", self.refresh)
+        # Show the menu at the cursor position
+        menu.exec(self.mapToGlobal(position))
 
     def refresh(self) -> None:
         """Refresh the widget's display to reflect completion."""
+        print("Refreshing Conda init status")
         is_done = self.is_done
         if not is_done:
             if self.run_button is None:
