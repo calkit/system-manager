@@ -7,6 +7,7 @@ in their editor of choice.
 __version__ = "0.0.1"
 
 import glob
+import itertools
 import os
 import platform
 import shutil
@@ -1182,7 +1183,15 @@ class InstallThread(QThread):
         cmd = self.cmd
         if cmd is None:
             cmd = [self.download_fpath]
-        subprocess.run(cmd)
+        # Split into subcommands based on the presence of &&
+        subcommands = [
+            list(group)
+            for key, group in itertools.groupby(cmd, lambda x: x == "&&")
+            if not key
+        ]
+        for subcommand in subcommands:
+            print("Running", subcommand)
+            subprocess.run(subcommand)
 
 
 class MainWindow(QWidget):
