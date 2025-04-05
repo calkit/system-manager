@@ -693,6 +693,7 @@ class VSCodeExtensionsInstall(DependencyInstall):
                 if cmd:
                     cmd.append("&&")
                 cmd += [code_path, "--install-extension", ext]
+        return cmd
 
 
 class GitInstall(DependencyInstall):
