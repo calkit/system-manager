@@ -361,7 +361,7 @@ class DependencyInstall(QWidget, metaclass=QWidgetABCMeta):
     @property
     def restart_after_install(self) -> bool:
         if get_platform() == "windows":
-            return False
+            return True
         return False
 
     def show_context_menu(self, position):
