@@ -740,10 +740,10 @@ class GitConfigStep(QWidget):
             self.label.setText(self.txt_not_set)
 
     @property
-    def cmd(self) -> str:
-        cmd = "git config --global"
+    def cmd(self) -> list[str]:
+        cmd = ["git", "config", "--global"]
         if self.wsl:
-            cmd = "wsl " + cmd
+            cmd = ["wsl"] + cmd
         return cmd
 
     @property
@@ -752,7 +752,7 @@ class GitConfigStep(QWidget):
             return ""
         try:
             return (
-                subprocess.check_output(f"{self.cmd} {self.key}", shell=True)
+                subprocess.check_output(self.cmd + [self.key])
                 .decode()
                 .strip()
             )
@@ -767,9 +767,9 @@ class GitConfigStep(QWidget):
             text=self.value,
         )
         if ok and text:
-            cmd = f"{self.cmd} {self.key} '{text}'"
+            cmd = self.cmd + [self.key, text]
             try:
-                subprocess.run(cmd, shell=True, check=True)
+                subprocess.run(cmd, shell=False, check=True)
             except Exception as e:
                 print(f"Failed to set Git {self.key}: {e}")
             self.refresh()
