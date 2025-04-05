@@ -182,11 +182,12 @@ def vs_code_installed() -> bool:
 
 
 def get_installed_vs_code_extensions() -> list[str]:
-    if not vs_code_installed():
+    code_path = shutil.which("code")
+    if code_path is None:
         return []
     return (
         subprocess.run(
-            ["code", "--list-extensions"], capture_output=True, text=True
+            [code_path, "--list-extensions"], capture_output=True, text=True
         )
         .stdout.strip()
         .split("\n")
@@ -675,12 +676,13 @@ class VSCodeExtensionsInstall(DependencyInstall):
     def install_command(self) -> list[str]:
         cmd = []
         installed = get_installed_vs_code_extensions()
+        code_path = shutil.which("code")
         for ext in self.recommended:
             if ext not in installed:
                 print("VS Code extension", ext, "not found")
                 if cmd:
                     cmd.append("&&")
-                cmd += ["code", "--install-extension", ext]
+                cmd += [code_path, "--install-extension", ext]
 
 
 class GitInstall(DependencyInstall):
