@@ -357,6 +357,7 @@ class DependencyInstall(QWidget, metaclass=QWidgetABCMeta):
     """An abstract base class to represent an installed dependency."""
 
     just_installed = Signal()
+    restart_after_install = True
 
     def __init__(self, child_steps: list[QWidget] = []):
         super().__init__()
@@ -448,6 +449,18 @@ class DependencyInstall(QWidget, metaclass=QWidgetABCMeta):
         for step in self.child_steps:
             step.refresh()
         self.just_installed.emit()
+        if self.restart_after_install:
+            # Show a dialog box explaining why we need to restart
+            msg_box = QMessageBox(self)
+            msg_box.setIcon(QMessageBox.Information)
+            msg_box.setWindowTitle("Calkit Assistant")
+            msg_box.setText(
+                "Calkit Assistant needs to restart to check "
+                f"{self.dependency_name} install."
+            )
+            msg_box.setStandardButtons(QMessageBox.Ok)
+            if msg_box.exec() == QMessageBox.Ok:
+                restart()
         if not self.installed:
             QMessageBox.critical(
                 self,
