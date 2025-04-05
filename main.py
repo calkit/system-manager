@@ -61,20 +61,7 @@ def to_kebab_case(str) -> str:
 
 
 def check_dep_exists(name: str) -> bool:
-    cmd = [name]
-    # Executables with non-conventional CLIs
-    if name == "matlab":
-        cmd.append("-help")
-    else:
-        # Fall back to simply calling ``--version``
-        cmd.append("--version")
-    try:
-        subprocess.run(
-            cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-        )
-        return True
-    except FileNotFoundError:
-        return False
+    return shutil.which(name) is not None
 
 
 def load_calkit_info(
