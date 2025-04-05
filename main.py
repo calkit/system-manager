@@ -288,11 +288,6 @@ def make_setup_step_layout(widget: QWidget) -> QHBoxLayout:
     return layout
 
 
-def relaunch_application():
-    """Relaunch this app."""
-    os.execl(sys.executable, sys.executable, *sys.argv)
-
-
 class CalkitToken(QWidget):
     """A widget to set the Calkit token."""
 
@@ -1631,6 +1626,10 @@ class MainWindow(QWidget):
         for _, step in self.setup_step_widgets.items():
             step.refresh()
 
+    def restart(self):
+        print("Restarting")
+        QApplication.exit(123)
+
 
 def run():
     print(f"Starting Calkit Assistant v{__version__}")
@@ -1639,7 +1638,11 @@ def run():
     app.setWindowIcon(icon)
     window = MainWindow()
     window.show()
-    sys.exit(app.exec())
+    exit_code = app.exec()
+    if exit_code == 123:
+        os.execl(sys.executable, sys.executable, *sys.argv)
+    else:
+        sys.exit(exit_code)
 
 
 if __name__ == "__main__":
