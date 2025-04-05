@@ -1,4 +1,11 @@
 # Calkit Assistant
 
-A graphical desktop app to you get your machine set up for
-modern scientific computing.
+A desktop app to help set up and manage
+a modern, open-source scientific computing environment.
+
+![Screenshot](resources/screenshot.png)
+
+## Getting started
+
+Simply download and run the executable from the
+[⬇️latest release](https://github.com/calkit/calkit-assistant/releases/latest).
