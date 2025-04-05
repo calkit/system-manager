@@ -1331,7 +1331,7 @@ class NewProjectThread(QThread):
             QMessageBox.critical(
                 self.parent,
                 "Failed",
-                "Failed to create project",
+                "Failed to create project.",
             )
         else:
             self.success = True
