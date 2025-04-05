@@ -357,7 +357,6 @@ class DependencyInstall(QWidget, metaclass=QWidgetABCMeta):
     """An abstract base class to represent an installed dependency."""
 
     just_installed = Signal()
-    restart_after_install = True
 
     def __init__(self, child_steps: list[QWidget] = []):
         super().__init__()
@@ -372,14 +371,21 @@ class DependencyInstall(QWidget, metaclass=QWidgetABCMeta):
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.show_context_menu)
 
+    @property
+    def restart_after_install(self) -> bool:
+        if get_platform() == "windows":
+            return True
+        return False
+
     def show_context_menu(self, position):
         """Show a context menu at the given position."""
         menu = QMenu(self)
         menu.addAction("Refresh", self.refresh)
+        menu.addAction("Restart", restart)
         # Show the menu at the cursor position
         menu.exec(self.mapToGlobal(position))
 
-    def refresh(self) -> None:
+    def refresh(self) -> bool:
         """Refresh the widget, e.g., if it's been installed and we want to
         update the check mark display.
         """
@@ -406,6 +412,7 @@ class DependencyInstall(QWidget, metaclass=QWidgetABCMeta):
                 self.install_button = None
             # Update label to show installed
             self.label.setText(self.txt_installed)
+        return installed
 
     @property
     @abstractmethod
@@ -445,10 +452,6 @@ class DependencyInstall(QWidget, metaclass=QWidgetABCMeta):
 
     def finish_install(self):
         """After attempting to install, run this."""
-        self.refresh()
-        for step in self.child_steps:
-            step.refresh()
-        self.just_installed.emit()
         if self.restart_after_install:
             # Show a dialog box explaining why we need to restart
             msg_box = QMessageBox(self)
@@ -461,7 +464,11 @@ class DependencyInstall(QWidget, metaclass=QWidgetABCMeta):
             msg_box.setStandardButtons(QMessageBox.Ok)
             if msg_box.exec() == QMessageBox.Ok:
                 restart()
-        if not self.installed:
+        installed = self.refresh()
+        for step in self.child_steps:
+            step.refresh()
+        self.just_installed.emit()
+        if not installed:
             QMessageBox.critical(
                 self,
                 "Installation failed",
