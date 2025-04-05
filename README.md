@@ -8,4 +8,4 @@ a modern, open-source scientific computing environment.
 ## Getting started
 
 Simply download and run the executable from the
-[⬇️latest release](https://github.com/calkit/calkit-assistant/releases/latest).
+[⬇️ latest release](https://github.com/calkit/calkit-assistant/releases/latest).
