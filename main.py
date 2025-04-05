@@ -1627,28 +1627,26 @@ def run():
     window.show()
     exit_code = app.exec()
     if exit_code == 123:
-        # Create a clean environmental variable dict free of PyInstaller
-        # changes
-        clean_env = os.environ.copy()
-        for var in [
-            "PYTHONHOME",
-            "PYTHONPATH",
-            "_MEIPASS2",
-            "_PYI_APPLICATION_HOME_DIR",
-            "_PYI_ARCHIVE_FILE",
-            "_PYI_PARENT_PROCESS_LEVEL",
-            "QT_PLUGIN_PATH",
-            "QML2_IMPORT_PATH",
-        ]:
-            clean_env.pop(var, None)
-        executable = sys.executable
-        cmd = [executable, *sys.argv]
         if get_platform() == "windows":
-            cmd = ["start", "cmd", "/c"] + cmd
+            # Create a clean environmental variable dict free of PyInstaller
+            # changes
+            clean_env = os.environ.copy()
+            for var in [
+                "PYTHONHOME",
+                "PYTHONPATH",
+                "_MEIPASS2",
+                "_PYI_APPLICATION_HOME_DIR",
+                "_PYI_ARCHIVE_FILE",
+                "_PYI_PARENT_PROCESS_LEVEL",
+                "QT_PLUGIN_PATH",
+                "QML2_IMPORT_PATH",
+            ]:
+                clean_env.pop(var, None)
+            cmd = ["start", "cmd", "/c", sys.executable, *sys.argv]
+            print("Using command:", cmd)
+            subprocess.Popen(cmd, shell=True, env=clean_env)
         else:
-            cmd = ["/bin/bash", "-c"]
-        print("Using command:", cmd)
-        subprocess.Popen(cmd, shell=True, env=clean_env)
+            os.execl(sys.executable, sys.executable, *sys.argv)
         sys.exit(0)
     else:
         sys.exit(exit_code)
