@@ -366,7 +366,6 @@ class DependencyInstall(QWidget, metaclass=QWidgetABCMeta):
         """Show a context menu at the given position."""
         menu = QMenu(self)
         menu.addAction("Refresh", self.refresh)
-        menu.addAction("Restart", restart)
         # Show the menu at the cursor position
         menu.exec(self.mapToGlobal(position))
 
