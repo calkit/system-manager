@@ -360,8 +360,6 @@ class DependencyInstall(QWidget, metaclass=QWidgetABCMeta):
 
     @property
     def restart_after_install(self) -> bool:
-        if get_platform() == "windows":
-            return True
         return False
 
     def show_context_menu(self, position):
@@ -600,9 +598,6 @@ class DockerInstall(DependencyInstall):
 
     @property
     def installed(self) -> bool:
-        if get_platform() == "windows":
-            process = run_in_powershell("docker --version")
-            return process.returncode == 0
         return check_dep_exists("docker")
 
     @property
@@ -1618,8 +1613,40 @@ def restart():
     QApplication.exit(123)
 
 
+def check_windows_path():
+    """Check the `PATH` environmental variable on Windows.
+
+    This is necessary so we don't need to restart after installing certain
+    apps.
+    """
+    path = os.getenv("PATH")
+    items = path.split(";")
+    required_items = [
+        "C:\\Program Files\\Git\\cmd",
+        "C:\\Program Files\\Docker\\Docker\\resources\\bin",
+        os.path.join(
+            os.path.expanduser("~"),
+            "AppData",
+            "Local",
+            "Programs",
+            "Microsoft VS Code",
+            "bin",
+        ),
+        os.path.join(
+            os.path.expanduser("~"),
+            ".local",
+            "bin",
+        ),
+    ]
+    for item in required_items:
+        if item not in items:
+            items.append(item)
+    os.environ["PATH"] = ";".join(items)
+
+
 def run():
     print(f"Starting Calkit Assistant v{__version__}")
+    check_windows_path()
     app = QApplication(sys.argv)
     icon = QIcon("resources/icon.ico")
     app.setWindowIcon(icon)
