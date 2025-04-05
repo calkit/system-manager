@@ -1654,7 +1654,12 @@ def run():
     window.show()
     exit_code = app.exec()
     if exit_code == 123:
-        os.execl(sys.executable, sys.executable, *sys.argv)
+        if get_platform() == "windows":
+            cmd = f"start {sys.executable} {' '.join(sys.argv)}"
+            subprocess.Popen(cmd, shell=True)
+            sys.exit(0)
+        else:
+            os.execl(sys.executable, sys.executable, *sys.argv)
     else:
         sys.exit(exit_code)
 
