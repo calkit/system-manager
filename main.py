@@ -661,6 +661,15 @@ class VSCodeExtensionsInstall(DependencyInstall):
     recommended = [
         "james-yu.latex-workshop",
         "iterative.dvc",
+        "mechatroner.rainbow-csv",
+        "charliermarsh.ruff",
+        "ms-python.python",
+        "ms-toolsai.jupyter",
+        "redhat.vscode-yaml",
+        "eamodio.gitlens",
+        "bierner.markdown-mermaid",
+        "mathworks.language-matlab",
+        "grapecity.gc-excelviewer",
     ]
 
     @property
