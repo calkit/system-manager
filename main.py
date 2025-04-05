@@ -1626,9 +1626,10 @@ class MainWindow(QWidget):
         for _, step in self.setup_step_widgets.items():
             step.refresh()
 
-    def restart(self):
-        print("Restarting")
-        QApplication.exit(123)
+
+def restart():
+    print("Restarting")
+    QApplication.exit(123)
 
 
 def run():
