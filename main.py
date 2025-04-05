@@ -682,6 +682,7 @@ class VSCodeExtensionsInstall(DependencyInstall):
             set(self.recommended) - set(get_installed_vs_code_extensions())
         )
 
+    @property
     def install_command(self) -> list[str]:
         cmd = []
         installed = get_installed_vs_code_extensions()
