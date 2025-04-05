@@ -757,23 +757,11 @@ class GitConfigStep(QWidget):
         if self.wsl and not wsl_installed():
             return ""
         try:
-            if get_platform() == "windows":
-                return (
-                    run_in_git_bash(
-                        f"{self.cmd} {self.key}",
-                        capture_output=True,
-                    )
-                    .stdout.decode()
-                    .strip()
-                )
-            else:
-                return (
-                    subprocess.check_output(
-                        f"{self.cmd} {self.key}", shell=True
-                    )
-                    .decode()
-                    .strip()
-                )
+            return (
+                subprocess.check_output(f"{self.cmd} {self.key}", shell=True)
+                .decode()
+                .strip()
+            )
         except (subprocess.CalledProcessError, FileNotFoundError):
             return ""
 
@@ -787,10 +775,7 @@ class GitConfigStep(QWidget):
         if ok and text:
             cmd = f"{self.cmd} {self.key} '{text}'"
             try:
-                if get_platform() == "windows":
-                    run_in_git_bash(cmd, check=True)
-                else:
-                    subprocess.run(cmd, shell=True, check=True)
+                subprocess.run(cmd, shell=True, check=True)
             except Exception as e:
                 print(f"Failed to set Git {self.key}: {e}")
             self.refresh()
