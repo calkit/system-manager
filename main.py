@@ -181,6 +181,18 @@ def vs_code_installed() -> bool:
         return False
 
 
+def get_installed_vs_code_extensions() -> list[str]:
+    if not vs_code_installed():
+        return []
+    return (
+        subprocess.run(
+            ["code", "--list-extensions"], capture_output=True, text=True
+        )
+        .stdout.strip()
+        .split("\n")
+    )
+
+
 def find_conda_prefix() -> str:
     """Attempt to find the Conda prefix.
 
@@ -644,6 +656,33 @@ class VSCodeInstall(DependencyInstall):
             raise NotImplementedError
 
 
+class VSCodeExtensionsInstall(DependencyInstall):
+    recommended = [
+        "james-yu.latex-workshop",
+        "iterative.dvc",
+    ]
+
+    @property
+    def dependency_name(self) -> str:
+        return "VS Code extensions"
+
+    @property
+    def installed(self) -> bool:
+        return not (
+            set(self.recommended) - set(get_installed_vs_code_extensions())
+        )
+
+    def install_command(self) -> list[str]:
+        cmd = []
+        installed = get_installed_vs_code_extensions()
+        for ext in self.recommended:
+            if ext not in installed:
+                print("VS Code extension", ext, "not found")
+                if cmd:
+                    cmd.append("&&")
+                cmd += ["code", "--install-extension", ext]
+
+
 class GitInstall(DependencyInstall):
     @property
     def dependency_name(self) -> str:
@@ -752,9 +791,7 @@ class GitConfigStep(QWidget):
             return ""
         try:
             return (
-                subprocess.check_output(self.cmd + [self.key])
-                .decode()
-                .strip()
+                subprocess.check_output(self.cmd + [self.key]).decode().strip()
             )
         except (subprocess.CalledProcessError, FileNotFoundError):
             return ""
@@ -971,9 +1008,10 @@ def make_setup_step_widgets() -> dict[str, QWidget]:
     steps["calkit"] = calkit_install
     # Ensure Calkit token is set
     steps["calkit-token"] = calkit_token
-    # Install VS Code
-    steps["vscode"] = VSCodeInstall()
-    # TODO: Install recommended VS Code extensions
+    # Install VS Code and recommended extensions
+    vs_code_extensions = VSCodeExtensionsInstall()
+    steps["vscode"] = VSCodeInstall(child_steps=[vs_code_extensions])
+    steps["vscode-extensions"] = vs_code_extensions
     return steps
 
 
