@@ -265,11 +265,16 @@ def run_in_powershell(
     capture_output: bool = False,
     check: bool = False,
     wdir: str | None = None,
+    bypass_execution_policy: bool = False,
 ) -> subprocess.CompletedProcess:
     if as_admin:
         cmd = f"Start-Process PowerShell -Verb RunAs -ArgumentList '{cmd}'"
+    powershell_cmd = ["powershell"]
+    if bypass_execution_policy:
+        powershell_cmd += ["-ExecutionPolicy", "ByPass"]
+    powershell_cmd += ["-Command", cmd]
     return subprocess.run(
-        ["powershell", "-Command", cmd],
+        powershell_cmd,
         capture_output=capture_output,
         check=check,
         cwd=wdir,
@@ -567,7 +572,7 @@ class WSLInstall(DependencyInstall):
             "-Verb",
             "runAs",
             "-ArgumentList",
-            f"\"/k {cmd}\"",
+            f'"/k {cmd}"',
         ]
 
     def finish_install(self):
@@ -935,10 +940,14 @@ class CondaInit(QWidget):
             # First make sure we can run scripts in PowerShell
             print("Setting PowerShell execution policy to RemoteSigned")
             run_in_powershell(
-                "Set-ExecutionPolicy -ExecutionPolicy RemoteSigned",
+                (
+                    "-ExecutionPolicy ByPass Set-ExecutionPolicy "
+                    "RemoteSigned -Scope CurrentUser -Confirm:$false"
+                ),
                 as_admin=True,
                 capture_output=False,
                 check=False,
+                bypass_execution_policy=True,
             )
             conda_exe = os.path.join(find_conda_prefix(), "Scripts", "conda")
             # Convert to posix path
