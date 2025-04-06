@@ -702,6 +702,7 @@ class VSCodeExtensionsInstall(DependencyInstall):
         "bierner.markdown-mermaid",
         "mathworks.language-matlab",
         "grapecity.gc-excelviewer",
+        "ms-vscode-remote.remote-containers",
     ]
 
     @property
