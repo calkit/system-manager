@@ -581,9 +581,10 @@ class WSLInstall(DependencyInstall):
             "changes to take effect."
         )
         # Create one button for restart now and one for restart later
-        msg_box.addButton("Restart now", QMessageBox.YesRole)
+        restart_button = msg_box.addButton("Restart now", QMessageBox.YesRole)
         msg_box.addButton("Restart later", QMessageBox.NoRole)
-        if msg_box.exec() == QMessageBox.YesRole:
+        msg_box.exec()
+        if msg_box.clickedButton() == restart_button:
             subprocess.run("shutdown /r /t 0", shell=True)
 
 
