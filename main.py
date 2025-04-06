@@ -4,7 +4,7 @@ This app helps install and track system-wide dependencies and open projects
 in their editor of choice.
 """
 
-__version__ = "0.0.1"
+__version__ = "0.0.2"
 
 import glob
 import itertools
