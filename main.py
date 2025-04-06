@@ -542,17 +542,49 @@ class WSLInstall(DependencyInstall):
     @property
     def install_command(self) -> list[str]:
         # Run command as administrator in PowerShell
-        cmd = "wsl --install -d Ubuntu"
+        cmd = (
+            "dism.exe /online /enable-feature "
+            "/featurename:Microsoft-Windows-Subsystem-Linux /all /norestart "
+            "&& dism.exe /online /enable-feature "
+            "/featurename:VirtualMachinePlatform /all /norestart && "
+            "wsl --set-default-version 2 && "
+            "wsl --install -d Ubuntu"
+        )
         return [
+            "winget",
+            "install",
+            "--accept-source-agreements",
+            "--accept-package-agreements",
+            "Microsoft.WSL",
+            "--force",
+            "&&",
             "powershell",
+            "-ExecutionPolicy",
+            "Bypass",
             "-Command",
             "Start-Process",
-            "powershell",
+            "cmd",
             "-Verb",
             "runAs",
             "-ArgumentList",
-            f"'{cmd}'",
+            f"\"/k {cmd}\"",
         ]
+
+    def finish_install(self):
+        """Prompt user to restart their computer for changes to take effect."""
+        msg_box = QMessageBox(self)
+        msg_box.setIcon(QMessageBox.Information)
+        msg_box.setWindowTitle("Calkit Assistant")
+        msg_box.setText(
+            "WSL is being installed in the background command prompt. "
+            "After it finishes, please restart your computer for the "
+            "changes to take effect."
+        )
+        # Create one button for restart now and one for restart later
+        msg_box.addButton("Restart now", QMessageBox.YesRole)
+        msg_box.addButton("Restart later", QMessageBox.NoRole)
+        if msg_box.exec() == QMessageBox.YesRole:
+            subprocess.run("shutdown /r /t 0", shell=True)
 
 
 class CondaInstall(DependencyInstall):
