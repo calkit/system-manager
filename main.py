@@ -4,7 +4,7 @@ This app helps install and track system-wide dependencies and open projects
 in their editor of choice.
 """
 
-__version__ = "0.0.2"
+__version__ = "0.0.3"
 
 import glob
 import itertools
@@ -248,6 +248,14 @@ def run_in_git_bash(
         r"C:\Program Files\Git\git-bash.exe",
         r"C:\Program Files (x86)\Git\bin\bash.exe",
         r"C:\Program Files (x86)\Git\git-bash.exe",
+        os.path.join(
+            os.path.expanduser("~"),
+            "AppData",
+            "Local",
+            "Programs",
+            "Git",
+            "git-bash.exe",
+        ),
     ]
     for path in paths:
         if os.path.isfile(path):
