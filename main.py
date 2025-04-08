@@ -138,7 +138,7 @@ def get_calkit_token() -> str:
             .decode()
             .strip()
         )
-    except FileNotFoundError:
+    except (FileNotFoundError, subprocess.CalledProcessError):
         return ""
 
 
@@ -982,7 +982,11 @@ class CalkitInstall(DependencyInstall):
     @property
     def installed(self) -> bool:
         exe = os.path.join(get_conda_scripts_dir(), "calkit")
-        return check_dep_exists(exe)
+        try:
+            subprocess.check_output([exe, "--version"])
+            return True
+        except Exception:
+            return False
 
     @property
     def install_command(self) -> list[str]:
