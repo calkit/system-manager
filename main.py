@@ -4,7 +4,7 @@ This app helps install and track system-wide dependencies and open projects
 in their editor of choice.
 """
 
-__version__ = "0.0.3"
+__version__ = "0.0.4"
 
 import glob
 import itertools
@@ -131,15 +131,22 @@ def detect_project_name(wdir: str = None) -> str:
 
 
 def get_calkit_token() -> str:
-    exe = os.path.join(get_conda_scripts_dir(), "calkit")
     try:
         return (
-            subprocess.check_output([exe, "config", "get", "token"])
+            subprocess.check_output(["calkit", "config", "get", "token"])
             .decode()
             .strip()
         )
     except (FileNotFoundError, subprocess.CalledProcessError):
-        return ""
+        try:
+            exe = os.path.join(get_conda_scripts_dir(), "calkit")
+            return (
+                subprocess.check_output([exe, "config", "get", "token"])
+                .decode()
+                .strip()
+            )
+        except Exception:
+            return ""
 
 
 def get_platform() -> Literal["linux", "mac", "windows"]:
@@ -981,12 +988,16 @@ class CalkitInstall(DependencyInstall):
 
     @property
     def installed(self) -> bool:
-        exe = os.path.join(get_conda_scripts_dir(), "calkit")
         try:
-            subprocess.check_output([exe, "--version"])
+            subprocess.check_output(["calkit", "--version"])
             return True
         except Exception:
-            return False
+            try:
+                exe = os.path.join(get_conda_scripts_dir(), "calkit")
+                subprocess.check_output([exe, "--version"])
+                return True
+            except Exception:
+                return False
 
     @property
     def install_command(self) -> list[str]:
