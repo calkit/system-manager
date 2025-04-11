@@ -138,15 +138,7 @@ def get_calkit_token() -> str:
             .strip()
         )
     except (FileNotFoundError, subprocess.CalledProcessError):
-        try:
-            exe = os.path.join(get_conda_scripts_dir(), "calkit")
-            return (
-                subprocess.check_output([exe, "config", "get", "token"])
-                .decode()
-                .strip()
-            )
-        except Exception:
-            return ""
+        return ""
 
 
 def get_platform() -> Literal["linux", "mac", "windows"]:
