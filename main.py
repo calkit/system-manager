@@ -4,7 +4,7 @@ This app helps install and track system-wide dependencies and open projects
 in their editor of choice.
 """
 
-__version__ = "0.0.4"
+__version__ = "0.0.5"
 
 import glob
 import itertools
@@ -138,15 +138,7 @@ def get_calkit_token() -> str:
             .strip()
         )
     except (FileNotFoundError, subprocess.CalledProcessError):
-        try:
-            exe = os.path.join(get_conda_scripts_dir(), "calkit")
-            return (
-                subprocess.check_output([exe, "config", "get", "token"])
-                .decode()
-                .strip()
-            )
-        except Exception:
-            return ""
+        return ""
 
 
 def get_platform() -> Literal["linux", "mac", "windows"]:
@@ -992,30 +984,11 @@ class CalkitInstall(DependencyInstall):
             subprocess.check_output(["calkit", "--version"])
             return True
         except Exception:
-            try:
-                exe = os.path.join(get_conda_scripts_dir(), "calkit")
-                subprocess.check_output([exe, "--version"])
-                return True
-            except Exception:
-                return False
+            return False
 
     @property
     def install_command(self) -> list[str]:
-        pip_exe = os.path.join(get_conda_scripts_dir(), "pip")
-        conda_exe = os.path.join(get_conda_scripts_dir(), "conda")
-        return [
-            pip_exe,
-            "install",
-            "--upgrade",
-            "calkit-python",
-            "&&",
-            conda_exe,
-            "install",
-            "-y",
-            "-c",
-            "conda-forge",
-            "libsqlite=3.48.0",
-        ]
+        return ["uv", "tool", "install", "calkit-python"]
 
 
 class UvInstall(DependencyInstall):
@@ -1075,15 +1048,11 @@ def make_setup_step_widgets() -> dict[str, QWidget]:
     # However, this is not necessary on Linux
     # TODO: Ensure Docker permissions are set on Linux
     # TODO: Ensure we have GitHub credentials?
-    # Install Miniforge and check that shell is initialized
     calkit_token = CalkitToken()
     calkit_install = CalkitInstall(child_steps=[calkit_token])
-    conda_init = CondaInit()
-    steps["miniforge"] = CondaInstall(child_steps=[conda_init, calkit_install])
-    steps["conda-init"] = conda_init
     # Install uv
-    steps["uv"] = UvInstall()
-    # Install Calkit inside Miniforge base environment
+    steps["uv"] = UvInstall(child_steps=[calkit_install])
+    # Install Calkit as a uv tool
     steps["calkit"] = calkit_install
     # Ensure Calkit token is set
     steps["calkit-token"] = calkit_token
