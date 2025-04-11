@@ -1051,12 +1051,9 @@ def make_setup_step_widgets() -> dict[str, QWidget]:
     # Install Miniforge and check that shell is initialized
     calkit_token = CalkitToken()
     calkit_install = CalkitInstall(child_steps=[calkit_token])
-    conda_init = CondaInit()
-    steps["miniforge"] = CondaInstall(child_steps=[conda_init, calkit_install])
-    steps["conda-init"] = conda_init
     # Install uv
-    steps["uv"] = UvInstall()
-    # Install Calkit inside Miniforge base environment
+    steps["uv"] = UvInstall(child_steps=[calkit_install])
+    # Install Calkit as a uv tool
     steps["calkit"] = calkit_install
     # Ensure Calkit token is set
     steps["calkit-token"] = calkit_token
