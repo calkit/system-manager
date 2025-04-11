@@ -992,30 +992,11 @@ class CalkitInstall(DependencyInstall):
             subprocess.check_output(["calkit", "--version"])
             return True
         except Exception:
-            try:
-                exe = os.path.join(get_conda_scripts_dir(), "calkit")
-                subprocess.check_output([exe, "--version"])
-                return True
-            except Exception:
-                return False
+            return False
 
     @property
     def install_command(self) -> list[str]:
-        pip_exe = os.path.join(get_conda_scripts_dir(), "pip")
-        conda_exe = os.path.join(get_conda_scripts_dir(), "conda")
-        return [
-            pip_exe,
-            "install",
-            "--upgrade",
-            "calkit-python",
-            "&&",
-            conda_exe,
-            "install",
-            "-y",
-            "-c",
-            "conda-forge",
-            "libsqlite=3.48.0",
-        ]
+        return ["uv", "tool", "install", "calkit-python"]
 
 
 class UvInstall(DependencyInstall):
