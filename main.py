@@ -1048,7 +1048,6 @@ def make_setup_step_widgets() -> dict[str, QWidget]:
     # However, this is not necessary on Linux
     # TODO: Ensure Docker permissions are set on Linux
     # TODO: Ensure we have GitHub credentials?
-    # Install Miniforge and check that shell is initialized
     calkit_token = CalkitToken()
     calkit_install = CalkitInstall(child_steps=[calkit_token])
     # Install uv
