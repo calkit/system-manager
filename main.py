@@ -4,7 +4,7 @@ This app helps install and track system-wide dependencies and open projects
 in their editor of choice.
 """
 
-__version__ = "0.0.5"
+__version__ = "0.0.6"
 
 import glob
 import itertools
@@ -988,7 +988,7 @@ class CalkitInstall(DependencyInstall):
 
     @property
     def install_command(self) -> list[str]:
-        return ["uv", "tool", "install", "calkit-python"]
+        return ["uv", "tool", "install", "calkit-python", "--python", ">=3.10"]
 
 
 class UvInstall(DependencyInstall):
