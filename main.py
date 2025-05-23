@@ -4,7 +4,7 @@ This app helps install and track system-wide dependencies and open projects
 in their editor of choice.
 """
 
-__version__ = "0.0.5"
+__version__ = "0.0.6"
 
 import glob
 import itertools
@@ -354,8 +354,7 @@ class CalkitToken(QWidget):
             echo=QLineEdit.Password,
         )
         if ok and text:
-            exe = os.path.join(get_conda_scripts_dir(), "calkit")
-            cmd = [exe, "config", "set", "token", text]
+            cmd = ["calkit", "config", "set", "token", text]
             subprocess.check_call(cmd)
             self.refresh()
             self.just_set.emit()
@@ -988,7 +987,7 @@ class CalkitInstall(DependencyInstall):
 
     @property
     def install_command(self) -> list[str]:
-        return ["uv", "tool", "install", "calkit-python"]
+        return ["uv", "tool", "install", "calkit-python", "--python", ">=3.10"]
 
 
 class UvInstall(DependencyInstall):
