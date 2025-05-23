@@ -354,8 +354,7 @@ class CalkitToken(QWidget):
             echo=QLineEdit.Password,
         )
         if ok and text:
-            exe = os.path.join(get_conda_scripts_dir(), "calkit")
-            cmd = [exe, "config", "set", "token", text]
+            cmd = ["calkit", "config", "set", "token", text]
             subprocess.check_call(cmd)
             self.refresh()
             self.just_set.emit()
